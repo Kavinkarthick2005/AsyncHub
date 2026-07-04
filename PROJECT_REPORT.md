@@ -53,7 +53,23 @@ The dashboard provides a real-time, bird's-eye view of the system's health:
 
 ## Screenshots
 
-*(Validator Note: Screenshots of the dashboard, queues, real-time worker execution, and the animated landing page should be inserted here)*
+![Landing Page](./screenshots/landing.png)
+*Landing Page with GSAP animations*
+
+![Dashboard](./screenshots/dashboard.png)
+*Real-time Dashboard showing metrics and heatmaps*
+
+![Queues](./screenshots/queue.png)
+*Job Queues overview*
+
+![Job Workflow](./screenshots/jobb.png)
+*Job Workflow* 
+
+![Workflows](./screenshots/workflow.png)
+*Workflows*
+
+![Workers](./screenshots/worker.png)
+*Distributed Worker nodes*
 
 - **Landing Page**: Showcasing the GSAP "How it Works" scroll animation.
 - **Dashboard**: Displaying populated metrics, heatmaps, and system health.

@@ -80,9 +80,15 @@ async def org_websocket_endpoint(
 async def queue_websocket_endpoint(
     websocket: WebSocket,
     queue_id: UUID,
-    user = Depends(get_current_user_ws),
+    token: str = Query(...),
     db: AsyncSession = Depends(get_db)
 ):
+    try:
+        user = await get_current_user_ws(token, db)
+    except Exception as e:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid auth")
+        return
+        
     # Verify the queue exists and user has access
     # For now, minimal RBAC: any authenticated user can view if the queue exists.
     queue_res = await db.execute(select(Queue).where(Queue.id == queue_id))
