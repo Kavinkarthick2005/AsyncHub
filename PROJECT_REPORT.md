@@ -88,8 +88,8 @@ The dashboard provides a real-time, bird's-eye view of the system's health:
    docker-compose exec api python scripts/seed_user_data.py <YOUR_ORG_ID>
    ```
 3. **Access the application**:
-   - Web UI: `http://localhost:3000`
-   - API Docs: `http://localhost:8000/docs`
+   - Web UI: `https://async-hub.vercel.app/`
+   - Backend: `https://asynchub.onrender.com/`
 
 ---
 *Developed as a comprehensive showcase of modern full-stack engineering, asynchronous Python architecture, and polished React UI/UX.*
