@@ -196,6 +196,7 @@ export function WorkflowPreview() {
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
+            colorMode="dark"
             nodeTypes={nodeTypes}
             fitView
             fitViewOptions={{ padding: 0.2 }}

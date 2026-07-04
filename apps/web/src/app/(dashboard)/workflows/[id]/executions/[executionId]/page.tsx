@@ -134,6 +134,7 @@ export default function ExecutionDetailView(props: { params: Promise<{ id: strin
         <ReactFlow
           nodes={nodes}
           edges={edges}
+          colorMode="dark"
           fitView
           nodesDraggable={false}
           nodesConnectable={false}

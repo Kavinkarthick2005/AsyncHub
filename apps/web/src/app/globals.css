@@ -143,10 +143,10 @@
 
 /* Fix React Flow Default Nodes for Dark Theme */
 .dark .react-flow__node-default, .dark .react-flow__node-input, .dark .react-flow__node-output {
-  background-color: var(--card);
-  color: var(--foreground);
-  border-color: var(--border);
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  border-radius: var(--radius-md);
-  font-family: var(--font-sans);
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  border-radius: var(--radius-md) !important;
+  font-family: var(--font-sans) !important;
 }

@@ -358,6 +358,7 @@ export default function WorkflowBuilderPage(props: { params: Promise<{ id: strin
           onConnect={onConnect}
           onNodeClick={(_, node) => setSelectedNode(node)}
           onPaneClick={() => setSelectedNode(null)}
+          colorMode="dark"
           fitView
         >
           <Background />
