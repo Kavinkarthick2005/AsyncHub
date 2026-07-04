@@ -25,6 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import {
   DASHBOARD_NAV_ITEMS,
@@ -64,30 +65,32 @@ export function AppSidebar() {
                 side={isMobile ? "bottom" : "right"}
                 sideOffset={4}
               >
-                <DropdownMenuLabel className="text-xs text-muted-foreground">
-                  Workspaces
-                </DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => setActiveWorkspace("Acme Corp")} className="gap-2 p-2 cursor-pointer">
-                  <div className="flex size-6 items-center justify-center rounded-sm border">
-                    <Command className="size-3" />
-                  </div>
-                  Acme Corp
-                  <DropdownMenuShortcut>⌘1</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setActiveWorkspace("Stark Industries")} className="gap-2 p-2 cursor-pointer">
-                  <div className="flex size-6 items-center justify-center rounded-sm border">
-                    <Command className="size-3" />
-                  </div>
-                  Stark Industries
-                  <DropdownMenuShortcut>⌘2</DropdownMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-2 p-2 cursor-pointer text-muted-foreground">
-                  <div className="flex size-6 items-center justify-center rounded-md bg-background border">
-                    <Plus className="size-4" />
-                  </div>
-                  <div className="font-medium text-foreground">Add workspace</div>
-                </DropdownMenuItem>
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    Workspaces
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => setActiveWorkspace("Acme Corp")} className="gap-2 p-2 cursor-pointer">
+                    <div className="flex size-6 items-center justify-center rounded-sm border">
+                      <Command className="size-3" />
+                    </div>
+                    Acme Corp
+                    <DropdownMenuShortcut>⌘1</DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveWorkspace("Stark Industries")} className="gap-2 p-2 cursor-pointer">
+                    <div className="flex size-6 items-center justify-center rounded-sm border">
+                      <Command className="size-3" />
+                    </div>
+                    Stark Industries
+                    <DropdownMenuShortcut>⌘2</DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="gap-2 p-2 cursor-pointer text-muted-foreground">
+                    <div className="flex size-6 items-center justify-center rounded-md bg-background border">
+                      <Plus className="size-4" />
+                    </div>
+                    <div className="font-medium text-foreground">Add workspace</div>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
