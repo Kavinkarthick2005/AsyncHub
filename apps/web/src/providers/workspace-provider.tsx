@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 export interface Organization {
   id: string;
   name: string;
+  slug: string;
 }
 
 interface WorkspaceContextType {
