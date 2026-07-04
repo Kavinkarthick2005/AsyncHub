@@ -28,5 +28,8 @@ RUN pip install --no-cache /wheels/*
 
 COPY . .
 
-# Default command for API, will be overridden for worker in docker-compose
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+COPY start.sh .
+RUN chmod +x start.sh
+
+# Default command for API and worker in same container
+CMD ["./start.sh"]
