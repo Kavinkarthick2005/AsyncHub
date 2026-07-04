@@ -18,7 +18,7 @@ AsyncHub is an open-source, full-stack distributed systems platform designed to 
 Built for resiliency and scale, it utilizes PostgreSQL `SKIP LOCKED` concurrency control to enable a distributed worker fleet without requiring an external message broker like RabbitMQ or Redis, keeping the architecture highly cohesive and easy to deploy.
 
 ### 🏛️ Architecture
-![Dashboard](./screenshots/dashboard.png)
+![Dashboard](./diagram/architectuure_diaram.png)
 
 ## 🚀 The Problem & Solution
 **The Problem**: Traditional background job systems often obscure failure. When a job drops, tracking the dead-letter queues, analyzing throughput, or orchestrating dependent jobs (DAGs) requires cobbling together multiple tools (like Celery + Flower + Airflow). 
@@ -37,6 +37,7 @@ Built for resiliency and scale, it utilizes PostgreSQL `SKIP LOCKED` concurrency
 - **Multi-Tenancy**: Isolate environments using Organizations and Projects with unique API Keys.
 
 ![Workflow Builder](./screenshots/workflow.png)
+![ER Diagram](./diagram/ER_DIAGRAM.png)
 
 ## 🛠️ Tech Stack
 - **Backend:** Python, FastAPI, SQLAlchemy, Pydantic, Loguru, Alembic, PostgreSQL (asyncpg).
