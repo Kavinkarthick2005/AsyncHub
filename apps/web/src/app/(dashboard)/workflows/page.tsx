@@ -1,0 +1,1 @@
+export default function WorkflowsPage() { return (<div className="flex flex-1 items-center justify-center h-full min-h-[50vh]"><div className="text-center"><h1 className="text-2xl font-bold tracking-tight capitalize">Workflows</h1><p className="text-muted-foreground mt-2">This page is under construction.</p></div></div>); }
