@@ -37,7 +37,7 @@ Built for resiliency and scale, it utilizes PostgreSQL `SKIP LOCKED` concurrency
 - **Multi-Tenancy**: Isolate environments using Organizations and Projects with unique API Keys.
 
 ![Workflow Builder](./screenshots/workflow.png)
-![ER Diagram](./diagram/ER_DIAGRAM.png)
+![ER Diagram](./docs/diagram/ER_DIAGRAM.png)
 
 ## 🛠️ Tech Stack
 - **Backend:** Python, FastAPI, SQLAlchemy, Pydantic, Loguru, Alembic, PostgreSQL (asyncpg).
