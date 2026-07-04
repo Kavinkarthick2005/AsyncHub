@@ -3,8 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.dependencies.auth import get_current_user
 from app.models.user import User
-from app.schemas.organization import OrganizationCreate, OrganizationResponse
-from app.schemas.project import ProjectCreate, ProjectResponse
+from app.schemas.organization import OrganizationCreate, OrganizationUpdate, OrganizationResponse
+from app.schemas.project import ProjectCreate, ProjectUpdate, ProjectResponse
 from app.services.org_service import OrgService
 from typing import List
 from uuid import UUID
@@ -49,5 +49,42 @@ async def create_project(
 ):
     try:
         return await org_service.create_project(org_id, project_in, current_user.id)
-    except Exception as e:
+    except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.put("/{org_id}", response_model=OrganizationResponse)
+async def update_organization(
+    org_id: UUID,
+    org_in: OrganizationUpdate,
+    current_user: User = Depends(get_current_user),
+    org_service: OrgService = Depends(get_org_service)
+):
+    try:
+        return await org_service.update_organization(org_id, org_in, current_user.id)
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        if str(e) == "slug_taken":
+            raise HTTPException(status_code=409, detail="Slug already taken")
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.put("/{org_id}/projects/{project_id}", response_model=ProjectResponse)
+async def update_project(
+    org_id: UUID,
+    project_id: UUID,
+    project_in: ProjectUpdate,
+    current_user: User = Depends(get_current_user),
+    org_service: OrgService = Depends(get_org_service)
+):
+    try:
+        return await org_service.update_project(project_id, project_in, org_id, current_user.id)
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

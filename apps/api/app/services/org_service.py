@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.org_repository import OrgRepository
 from app.repositories.project_repository import ProjectRepository
-from app.schemas.organization import OrganizationCreate
-from app.schemas.project import ProjectCreate
+from app.schemas.organization import OrganizationCreate, OrganizationUpdate
+from app.schemas.project import ProjectCreate, ProjectUpdate
 from app.models.organization import Organization, OrganizationMember
 from app.models.project import Project
 from typing import List
@@ -37,3 +37,26 @@ class OrgService:
     async def create_project(self, org_id: UUID, project_in: ProjectCreate, user_id: UUID) -> Project:
         await self._check_permission(user_id, org_id, ["owner", "admin", "developer"])
         return await self.project_repo.create(org_id, project_in)
+
+    async def update_organization(self, org_id: UUID, org_in: OrganizationUpdate, user_id: UUID) -> Organization:
+        await self._check_permission(user_id, org_id, ["owner", "admin"])
+        
+        org = await self.org_repo.get_by_id(org_id)
+        if not org:
+            raise ValueError("Organization not found")
+
+        if org_in.slug is not None and org_in.slug != org.slug:
+            existing_org = await self.org_repo.get_by_slug(org_in.slug)
+            if existing_org:
+                raise ValueError("slug_taken")
+
+        return await self.org_repo.update(org, org_in)
+
+    async def update_project(self, project_id: UUID, project_in: ProjectUpdate, org_id: UUID, user_id: UUID) -> Project:
+        await self._check_permission(user_id, org_id, ["owner", "admin"])
+        
+        project = await self.project_repo.get_by_id(project_id)
+        if not project or project.org_id != org_id:
+            raise ValueError("Project not found")
+
+        return await self.project_repo.update(project, project_in)

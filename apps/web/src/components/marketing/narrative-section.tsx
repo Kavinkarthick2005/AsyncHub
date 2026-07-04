@@ -3,66 +3,54 @@
 import React, { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { AlertTriangle, ServerCrash, EyeOff, XCircle, Database, Server, Activity, CalendarClock, GitBranch, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ServerCrash, EyeOff, XCircle, Database, Server, Activity, GitBranch, ShieldCheck } from "lucide-react";
 
 export function NarrativeSection() {
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  const oldWayRef = useRef<HTMLDivElement>(null);
-  const newWayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      gsap.set([oldWayRef.current, newWayRef.current], { opacity: 1, position: "relative" });
       return;
     }
 
     const ctx = gsap.context(() => {
-      // Pin the entire container and animate between the two states
-      const tl = gsap.timeline({
+      // Fade in the old way
+      gsap.from(".old-way-box", {
         scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top top",
-          end: "+=150%", // Scroll distance
-          pin: true,
-          scrub: 1,
-        }
+          trigger: ".old-way-container",
+          start: "top 80%",
+        },
+        y: 30,
+        opacity: 0,
+        stagger: 0.1,
+        duration: 0.8,
+        ease: "power2.out"
       });
 
-      // Animate out the old way
-      tl.to(oldWayRef.current, { 
-        opacity: 0, 
-        y: -50, 
-        scale: 0.95,
-        duration: 1 
+      // Fade in the new way
+      gsap.from(".new-feature", {
+        scrollTrigger: {
+          trigger: ".new-way-container",
+          start: "top 80%",
+        },
+        y: 30,
+        opacity: 0,
+        stagger: 0.1,
+        duration: 0.8,
+        ease: "power2.out"
       });
-
-      // Animate in the new way
-      tl.fromTo(newWayRef.current, 
-        { opacity: 0, y: 50, scale: 0.95 }, 
-        { opacity: 1, y: 0, scale: 1, duration: 1 },
-        "-=0.5" // Overlap slightly
-      );
-
-      // Stagger in the feature items of the new way
-      tl.fromTo(".new-feature", 
-        { opacity: 0, x: -20 }, 
-        { opacity: 1, x: 0, stagger: 0.2, duration: 1 },
-        "-=0.5"
-      );
-
     }, containerRef);
 
     return () => ctx.revert();
   }, []);
 
   return (
-    <section ref={containerRef} className="relative h-screen w-full bg-muted/20 border-t border-border/50 overflow-hidden flex items-center justify-center">
+    <section ref={containerRef} className="relative w-full bg-muted/20 border-t border-border/50 overflow-hidden py-24 md:py-32">
       
-      <div className="container mx-auto max-w-screen-xl px-4 relative w-full h-full flex items-center justify-center">
+      <div className="container mx-auto max-w-screen-xl px-4 flex flex-col gap-24">
         
         {/* The Old Way (Traditional Background Jobs) */}
-        <div ref={oldWayRef} className="absolute inset-0 flex flex-col md:flex-row items-center justify-center gap-12 p-8 md:p-16">
+        <div className="old-way-container flex flex-col md:flex-row items-center gap-12">
           <div className="flex-1 text-center md:text-left">
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-muted-foreground">
               Traditional background jobs are a black box.
@@ -73,19 +61,19 @@ export function NarrativeSection() {
           </div>
           
           <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-            <div className="flex flex-col items-center justify-center p-6 bg-background border border-border rounded-xl text-muted-foreground/60 gap-3">
+            <div className="old-way-box flex flex-col items-center justify-center p-6 bg-background border border-border rounded-xl text-muted-foreground/60 gap-3">
               <EyeOff className="size-8" />
               <span className="font-medium">No Visibility</span>
             </div>
-            <div className="flex flex-col items-center justify-center p-6 bg-background border border-destructive/20 text-destructive/60 rounded-xl gap-3">
+            <div className="old-way-box flex flex-col items-center justify-center p-6 bg-background border border-destructive/20 text-destructive/60 rounded-xl gap-3">
               <AlertTriangle className="size-8" />
               <span className="font-medium">Hidden Failures</span>
             </div>
-            <div className="flex flex-col items-center justify-center p-6 bg-background border border-destructive/20 text-destructive/60 rounded-xl gap-3">
+            <div className="old-way-box flex flex-col items-center justify-center p-6 bg-background border border-destructive/20 text-destructive/60 rounded-xl gap-3">
               <ServerCrash className="size-8" />
               <span className="font-medium">Worker Crashes</span>
             </div>
-            <div className="flex flex-col items-center justify-center p-6 bg-background border border-border rounded-xl text-muted-foreground/60 gap-3">
+            <div className="old-way-box flex flex-col items-center justify-center p-6 bg-background border border-border rounded-xl text-muted-foreground/60 gap-3">
               <XCircle className="size-8" />
               <span className="font-medium">No Auto-Retries</span>
             </div>
@@ -93,7 +81,7 @@ export function NarrativeSection() {
         </div>
 
         {/* The New Way (AsyncHub) */}
-        <div ref={newWayRef} className="absolute inset-0 flex flex-col md:flex-row items-center justify-center gap-12 p-8 md:p-16 opacity-0 translate-y-[50px] pointer-events-none">
+        <div className="new-way-container flex flex-col md:flex-row items-center gap-12 pt-12 border-t border-border/50">
           <div className="flex-1 text-center md:text-left">
             <div className="inline-flex items-center space-x-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 mb-6 text-primary">
               <ShieldCheck className="size-4" />

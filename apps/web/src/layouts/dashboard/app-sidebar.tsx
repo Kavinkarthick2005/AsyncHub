@@ -4,6 +4,7 @@ import * as React from "react";
 import { Command, ChevronsUpDown, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 import {
   Sidebar,
@@ -39,7 +40,8 @@ import { CreateOrganizationDialog } from "@/components/create-organization-dialo
 export function AppSidebar() {
   const pathname = usePathname();
   const { isMobile } = useSidebar();
-  const { activeOrgId, setActiveOrgId, organizations, activeOrg, isLoadingOrgs } = useWorkspace();
+  const { organizations, activeOrg, activeOrgId, setActiveOrgId, isLoadingOrgs } = useWorkspace();
+  const [createOrgOpen, setCreateOrgOpen] = useState(false);
 
   return (
     <Sidebar collapsible="icon" variant="inset" className="border-r border-border/50 bg-background transition-all duration-300 ease-in-out">
@@ -87,20 +89,23 @@ export function AppSidebar() {
                     </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator />
-                  <CreateOrganizationDialog>
-                    <DropdownMenuItem className="gap-2 p-2 cursor-pointer text-muted-foreground" onSelect={(e) => e.preventDefault()}>
-                      <div className="flex size-6 items-center justify-center rounded-md bg-background border">
-                        <Plus className="size-4" />
-                      </div>
-                      <div className="font-medium text-foreground">Add workspace</div>
-                    </DropdownMenuItem>
-                  </CreateOrganizationDialog>
+                  <DropdownMenuItem 
+                    className="gap-2 p-2 cursor-pointer text-muted-foreground" 
+                    onSelect={(e) => { e.preventDefault(); setCreateOrgOpen(true); }}
+                  >
+                    <div className="flex size-6 items-center justify-center rounded-md bg-background border">
+                      <Plus className="size-4" />
+                    </div>
+                    <div className="font-medium text-foreground">Add workspace</div>
+                  </DropdownMenuItem>
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+      
+      <CreateOrganizationDialog open={createOrgOpen} onOpenChange={setCreateOrgOpen} />
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Platform</SidebarGroupLabel>

@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.db.session import AsyncSessionLocal
-from app.models.organization import Organization
+from app.models.organization import Organization, OrganizationMember
 from app.models.user import User
 from app.models.project import Project
 from app.models.queue import Queue
@@ -30,15 +30,20 @@ async def seed_data():
 
         # 2. Create User
         hashed_password = pwd_context.hash("demo123")
-        user = User(email="demo@asynchub.com", hashed_password=hashed_password, organization_id=org.id)
+        user = User(email="demo@asynchub.com", hashed_password=hashed_password)
         session.add(user)
+        await session.flush()
+
+        # 3. Create Organization Member
+        member = OrganizationMember(user_id=user.id, org_id=org.id, role="owner")
+        session.add(member)
         await session.flush()
 
         # 3. Create Projects
         projects = {
-            "Email Service": Project(name="Email Service", organization_id=org.id, api_key="sk_demo_email"),
-            "Image Pipeline": Project(name="Image Pipeline", organization_id=org.id, api_key="sk_demo_image"),
-            "Data Processing": Project(name="Data Processing", organization_id=org.id, api_key="sk_demo_data")
+            "Email Service": Project(name="Email Service", org_id=org.id),
+            "Image Pipeline": Project(name="Image Pipeline", org_id=org.id),
+            "Data Sync": Project(name="Data Sync", org_id=org.id)
         }
         for p in projects.values():
             session.add(p)
@@ -48,8 +53,8 @@ async def seed_data():
         queues = {
             "emails": Queue(name="emails", project_id=projects["Email Service"].id),
             "images": Queue(name="images", project_id=projects["Image Pipeline"].id),
-            "analytics": Queue(name="analytics", project_id=projects["Data Processing"].id),
-            "reports": Queue(name="reports", project_id=projects["Data Processing"].id),
+            "analytics": Queue(name="analytics", project_id=projects["Data Sync"].id),
+            "reports": Queue(name="reports", project_id=projects["Data Sync"].id),
             "notifications": Queue(name="notifications", project_id=projects["Email Service"].id)
         }
         for q in queues.values():
@@ -73,15 +78,15 @@ async def seed_data():
         # 6. Create Workflows
         wf_image = Workflow(name="Image Processing", description="Resize and watermork images", project_id=projects["Image Pipeline"].id, definition={})
         wf_onboard = Workflow(name="Customer Onboarding", description="Send emails and provision accounts", project_id=projects["Email Service"].id, definition={})
-        wf_reports = Workflow(name="Monthly Reports", description="Generate and email PDFs", project_id=projects["Data Processing"].id, definition={})
+        wf_reports = Workflow(name="Monthly Reports", description="Generate and email PDFs", project_id=projects["Data Sync"].id, definition={})
         session.add_all([wf_image, wf_onboard, wf_reports])
         await session.flush()
 
         # 7. Create Scheduled Jobs
-        for i in range(8):
-            q = list(queues.values())[i % len(queues)]
-            s = Schedule(name=f"Cron {i}", project_id=q.project_id, queue_id=q.id, cron_expr="*/5 * * * *", payload={"task": "ping"})
+        for i, q in enumerate(queues.values()):
+            s = Schedule(name=f"Cron {i}", queue_id=q.id, cron_expression="*/5 * * * *", payload_template={"task": "ping"})
             session.add(s)
+        await session.flush()
         
         # 8. Create Jobs
         logger.info("Creating jobs... this may take a moment.")

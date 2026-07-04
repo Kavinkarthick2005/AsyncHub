@@ -44,38 +44,24 @@ export function HeroSection() {
         { opacity: 1, y: 0, duration: 1, ease: "power3.out", delay: 0.5 }
       );
 
-      // 2. Infinite Orchestration Animation Loop
-      const tl = gsap.timeline({ repeat: -1, delay: 1 });
+      // 2. Simple clean stagger animation for the orchestration nodes
+      const nodes = [apiRef.current, queueRef.current, workerARef.current, workerBRef.current, dashboardRef.current];
       
-      // Flash API
-      tl.to(apiRef.current, { scale: 1.05, borderColor: "#3b82f6", boxShadow: "0 0 15px rgba(59,130,246,0.5)", duration: 0.2 })
-        .to(apiRef.current, { scale: 1, borderColor: "rgba(255,255,255,0.1)", boxShadow: "none", duration: 0.4 }, "+=0.2");
-        
-      // Flow API -> Queue (animate path 1)
-      tl.fromTo("#path-api-queue", { strokeDashoffset: 100 }, { strokeDashoffset: 0, duration: 0.5, ease: "power1.inOut" }, "-=0.4");
+      gsap.fromTo(nodes, 
+        { opacity: 0, scale: 0.8, y: 20 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.8, stagger: 0.2, ease: "back.out(1.7)", delay: 0.6 }
+      );
       
-      // Flash Queue
-      tl.to(queueRef.current, { scale: 1.05, borderColor: "#f59e0b", boxShadow: "0 0 15px rgba(245,158,11,0.5)", duration: 0.2 }, "-=0.1")
-        .to(queueRef.current, { scale: 1, borderColor: "rgba(255,255,255,0.1)", boxShadow: "none", duration: 0.4 }, "+=0.3");
-
-      // Flow Queue -> Workers (animate paths 2a & 2b)
-      tl.fromTo("#path-queue-workerA", { strokeDashoffset: 100 }, { strokeDashoffset: 0, duration: 0.5, ease: "power1.inOut" }, "-=0.4");
-      tl.fromTo("#path-queue-workerB", { strokeDashoffset: 100 }, { strokeDashoffset: 0, duration: 0.5, ease: "power1.inOut" }, "<");
-
-      // Flash Workers
-      tl.to([workerARef.current, workerBRef.current], { scale: 1.05, borderColor: "#22c55e", boxShadow: "0 0 15px rgba(34,197,94,0.5)", duration: 0.2 }, "-=0.1")
-        .to([workerARef.current, workerBRef.current], { scale: 1, borderColor: "rgba(255,255,255,0.1)", boxShadow: "none", duration: 0.4 }, "+=0.5");
-
-      // Flow Workers -> Dashboard
-      tl.fromTo("#path-workerA-dash", { strokeDashoffset: 100 }, { strokeDashoffset: 0, duration: 0.5, ease: "power1.inOut" }, "-=0.4");
-      tl.fromTo("#path-workerB-dash", { strokeDashoffset: 100 }, { strokeDashoffset: 0, duration: 0.5, ease: "power1.inOut" }, "<");
-
-      // Flash Dashboard
-      tl.to(dashboardRef.current, { scale: 1.05, borderColor: "#a855f7", boxShadow: "0 0 15px rgba(168,85,247,0.5)", duration: 0.2 }, "-=0.1")
-        .to(dashboardRef.current, { scale: 1, borderColor: "rgba(255,255,255,0.1)", boxShadow: "none", duration: 0.4 }, "+=0.5");
-
-      // Reset paths for next loop
-      tl.set(["#path-api-queue", "#path-queue-workerA", "#path-queue-workerB", "#path-workerA-dash", "#path-workerB-dash"], { strokeDashoffset: 100 });
+      // Floating infinite animation for the nodes
+      gsap.to(nodes, {
+        y: -10,
+        duration: 2,
+        stagger: 0.2,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+        delay: 2
+      });
 
     }, containerRef);
 
@@ -122,10 +108,9 @@ export function HeroSection() {
             </div>
 
             {/* Path 1 */}
-            <div className="absolute top-[18%] left-1/2 w-[2px] h-[15%] -translate-x-1/2 z-0">
+            <div className="absolute top-[18%] left-1/2 w-[2px] h-[15%] -translate-x-1/2 z-0 opacity-30">
               <svg width="2" height="100%" className="overflow-visible">
-                <line x1="1" y1="0" x2="1" y2="100%" stroke="rgba(255,255,255,0.1)" strokeWidth="2" strokeDasharray="4 4" />
-                <line id="path-api-queue" x1="1" y1="0" x2="1" y2="100%" stroke="#3b82f6" strokeWidth="2" strokeDasharray="100" strokeDashoffset="100" />
+                <line x1="1" y1="0" x2="1" y2="100%" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
               </svg>
             </div>
 
@@ -136,14 +121,10 @@ export function HeroSection() {
             </div>
 
             {/* Paths to Workers */}
-            <div className="absolute top-[48%] left-1/2 w-full max-w-[240px] h-[15%] -translate-x-1/2 z-0">
+            <div className="absolute top-[48%] left-1/2 w-full max-w-[240px] h-[15%] -translate-x-1/2 z-0 opacity-30">
               <svg width="100%" height="100%" className="overflow-visible" preserveAspectRatio="none">
-                {/* Background dashed lines */}
-                <path d="M 120 0 C 120 40, 20 40, 20 80" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2" strokeDasharray="4 4" />
-                <path d="M 120 0 C 120 40, 220 40, 220 80" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2" strokeDasharray="4 4" />
-                {/* Animated lines */}
-                <path id="path-queue-workerA" d="M 120 0 C 120 40, 20 40, 20 80" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="100" strokeDashoffset="100" />
-                <path id="path-queue-workerB" d="M 120 0 C 120 40, 220 40, 220 80" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="100" strokeDashoffset="100" />
+                <path d="M 120 0 C 120 40, 20 40, 20 80" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
+                <path d="M 120 0 C 120 40, 220 40, 220 80" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
               </svg>
             </div>
 
@@ -160,13 +141,10 @@ export function HeroSection() {
             </div>
 
             {/* Paths to Dashboard */}
-            <div className="absolute top-[78%] left-1/2 w-full max-w-[240px] h-[15%] -translate-x-1/2 z-0">
+            <div className="absolute top-[78%] left-1/2 w-full max-w-[240px] h-[15%] -translate-x-1/2 z-0 opacity-30">
               <svg width="100%" height="100%" className="overflow-visible" preserveAspectRatio="none">
-                <path d="M 20 0 C 20 40, 120 40, 120 80" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2" strokeDasharray="4 4" />
-                <path d="M 220 0 C 220 40, 120 40, 120 80" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2" strokeDasharray="4 4" />
-                
-                <path id="path-workerA-dash" d="M 20 0 C 20 40, 120 40, 120 80" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="100" strokeDashoffset="100" />
-                <path id="path-workerB-dash" d="M 220 0 C 220 40, 120 40, 120 80" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="100" strokeDashoffset="100" />
+                <path d="M 20 0 C 20 40, 120 40, 120 80" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
+                <path d="M 220 0 C 220 40, 120 40, 120 80" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
               </svg>
             </div>
 

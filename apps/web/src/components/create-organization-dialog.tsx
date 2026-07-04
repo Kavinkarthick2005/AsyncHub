@@ -1,55 +1,84 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchApi } from "@/lib/api-client";
-import { useWorkspace } from "@/providers/workspace-provider";
+import { useCreateOrganization, useUpdateOrganization } from "@/hooks/use-organizations";
+import { Organization } from "@/types";
+import { toast } from "sonner";
 
 interface CreateOrganizationDialogProps {
-  children: React.ReactElement;
+  children?: React.ReactElement;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  mode?: "create" | "edit";
+  organization?: Organization;
 }
 
-export function CreateOrganizationDialog({ children }: CreateOrganizationDialogProps) {
-  const [open, setOpen] = useState(false);
+export function CreateOrganizationDialog({ children, open: controlledOpen, onOpenChange: setControlledOpen, mode = "create", organization }: CreateOrganizationDialogProps) {
+  const [localOpen, setLocalOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : localOpen;
+  const setOpen = setControlledOpen || setLocalOpen;
+  
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
-  const { setActiveOrgId } = useWorkspace();
-  const queryClient = useQueryClient();
 
-  const createMutation = useMutation({
-    mutationFn: async () => {
-      return fetchApi("/organizations/", {
-        method: "POST",
-        body: JSON.stringify({ name, slug }),
-      });
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["userOrgs"] });
-      setActiveOrgId(data.id);
-      setOpen(false);
+  useEffect(() => {
+    if (open && mode === "edit" && organization) {
+      setName(organization.name);
+      setSlug(organization.slug);
+    } else if (open && mode === "create") {
       setName("");
       setSlug("");
-    },
-  });
+    }
+  }, [open, mode, organization]);
+
+  const createMutation = useCreateOrganization();
+  const updateMutation = useUpdateOrganization();
+
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !slug) return;
-    createMutation.mutate();
+    
+    if (mode === "create") {
+      createMutation.mutate({ name, slug }, {
+        onSuccess: () => {
+          toast.success("Organization created successfully");
+          setOpen(false);
+          setName("");
+          setSlug("");
+        },
+        onError: (err: any) => {
+          toast.error(err.message || "Failed to create organization");
+        }
+      });
+    } else if (mode === "edit" && organization) {
+      updateMutation.mutate({ id: organization.id, name, slug }, {
+        onSuccess: () => {
+          toast.success("Organization updated successfully");
+          setOpen(false);
+        },
+        onError: (err: any) => {
+          toast.error(err.message || "Failed to update organization");
+        }
+      });
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={children} />
+      {children && <DialogTrigger render={children} />}
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create Organization</DialogTitle>
+          <DialogTitle>{mode === "create" ? "Create Organization" : "Edit Organization"}</DialogTitle>
           <DialogDescription>
-            Create a new workspace to orchestrate your jobs and manage your team.
+            {mode === "create" 
+              ? "Create a new workspace to orchestrate your jobs and manage your team."
+              : "Update your organization details and workspace slug."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
@@ -61,7 +90,9 @@ export function CreateOrganizationDialog({ children }: CreateOrganizationDialogP
               value={name} 
               onChange={(e) => {
                 setName(e.target.value);
-                setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, "-"));
+                if (mode === "create") {
+                  setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, "-"));
+                }
               }}
               required 
             />
@@ -77,8 +108,11 @@ export function CreateOrganizationDialog({ children }: CreateOrganizationDialogP
             />
           </div>
           <DialogFooter className="mt-4">
-            <Button type="submit" disabled={createMutation.isPending || !name || !slug}>
-              {createMutation.isPending ? "Creating..." : "Create Organization"}
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isPending || !name || !slug}>
+              {isPending ? "Saving..." : mode === "create" ? "Create Organization" : "Save Changes"}
             </Button>
           </DialogFooter>
         </form>

@@ -9,6 +9,9 @@ class ProjectBase(BaseModel):
 class ProjectCreate(ProjectBase):
     pass
 
+class ProjectUpdate(BaseModel):
+    name: Optional[str] = None
+
 class ProjectResponse(ProjectBase):
     id: UUID
     org_id: UUID

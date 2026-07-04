@@ -233,7 +233,7 @@ async def get_dashboard_overview(
         RecentFailureItem(
             id=j.id,
             name=j.name,
-            error=j.error or "Unknown error",
+            error="Job execution failed",
             failed_at=j.completed_at
         ) for j in rf_res
     ]

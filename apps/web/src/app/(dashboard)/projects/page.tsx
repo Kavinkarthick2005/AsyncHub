@@ -8,10 +8,14 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/ca
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { fetchApi } from "@/lib/api-client";
+import { CreateProjectDialog } from "@/components/create-project-dialog";
+import { Edit2 } from "lucide-react";
+import { useState } from "react";
 
 export default function ProjectsPage() {
   const containerRef = useStaggerFadeIn(0.1, 0, 0.5);
   const { activeOrgId } = useWorkspace();
+  const [editingProject, setEditingProject] = useState<any>(null);
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ["projects", activeOrgId],
@@ -26,7 +30,9 @@ export default function ProjectsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
           <p className="text-muted-foreground mt-2">Manage your orchestration projects.</p>
         </div>
-        <Button disabled={!activeOrgId}>Create Project</Button>
+        <CreateProjectDialog>
+          <Button disabled={!activeOrgId}>Create Project</Button>
+        </CreateProjectDialog>
       </div>
 
       {!activeOrgId ? (
@@ -44,19 +50,33 @@ export default function ProjectsPage() {
           icon={FolderOpen}
           title="No Projects"
           description="This organization has no projects yet. Create one to get started."
-          actionLabel="Create Project"
-          onAction={() => alert("Create project dialog coming soon")}
+          actionNode={
+            <CreateProjectDialog>
+              <Button variant="outline">Create Project</Button>
+            </CreateProjectDialog>
+          }
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((project: any) => (
-            <Card key={project.id} className="transition-all hover:border-primary/50">
+            <Card key={project.id} className="transition-all hover:border-primary/50 flex flex-col justify-between">
               <CardHeader>
-                <CardTitle>{project.name}</CardTitle>
+                <CardTitle className="flex justify-between items-center">
+                  {project.name}
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingProject(project)}>
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                </CardTitle>
                 <CardDescription className="font-mono text-xs mt-2">{project.id}</CardDescription>
               </CardHeader>
             </Card>
           ))}
+          <CreateProjectDialog 
+            open={!!editingProject} 
+            onOpenChange={(open) => { if (!open) setEditingProject(null); }} 
+            mode="edit" 
+            project={editingProject} 
+          />
         </div>
       )}
     </div>

@@ -10,6 +10,10 @@ class OrganizationBase(BaseModel):
 class OrganizationCreate(OrganizationBase):
     pass
 
+class OrganizationUpdate(BaseModel):
+    name: Optional[str] = None
+    slug: Optional[str] = None
+
 class OrganizationResponse(OrganizationBase):
     id: UUID
     created_at: datetime

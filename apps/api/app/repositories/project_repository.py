@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models.project import Project
-from app.schemas.project import ProjectCreate
+from app.schemas.project import ProjectCreate, ProjectUpdate
 from typing import List, Optional
 from uuid import UUID
 
@@ -22,6 +22,13 @@ class ProjectRepository:
     async def create(self, org_id: UUID, project_in: ProjectCreate) -> Project:
         project = Project(org_id=org_id, name=project_in.name)
         self.session.add(project)
+        await self.session.commit()
+        await self.session.refresh(project)
+        return project
+
+    async def update(self, project: Project, obj_in: ProjectUpdate) -> Project:
+        if obj_in.name is not None:
+            project.name = obj_in.name
         await self.session.commit()
         await self.session.refresh(project)
         return project

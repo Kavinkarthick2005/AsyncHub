@@ -39,18 +39,18 @@ export function DeveloperExperience() {
           }
         }
       );
+    }, containerRef);
 
-      // We'll create an interactive animation that can be triggered by the button
-      // or automatically loops slowly when in view.
-      const tl = gsap.timeline({ paused: true });
+    // Save the animation timeline so we can trigger it
+    const animation = { play: () => {} };
+    animation.play = () => {
+      const tl = gsap.timeline();
 
       // Step 1: Click "Run" -> Packet shoots from Code to Processor
       tl.to(playButtonRef.current, { scale: 0.95, duration: 0.1, yoyo: true, repeat: 1 });
       
       tl.set(packetRef.current, { opacity: 1, x: 0, y: 0, scale: 1 });
       
-      // Calculate distances approx based on layout. Since they are flex row on desktop, col on mobile.
-      // Easiest is to just use a custom path or percentage, but since it's responsive, let's use a simple cross-fade/x-translate.
       tl.to(packetRef.current, {
         x: () => {
            const codeRect = codeBlockRef.current?.getBoundingClientRect();
@@ -71,7 +71,7 @@ export function DeveloperExperience() {
       // Step 2: Processing
       tl.to(packetRef.current, { scale: 0, opacity: 0, duration: 0.2 });
       tl.to(processorRef.current, { borderColor: "#3b82f6", boxShadow: "0 0 20px rgba(59,130,246,0.5)", duration: 0.2 });
-      tl.to(".cpu-icon", { rotation: 360, duration: 1, ease: "none" }, "<");
+      tl.to(".cpu-icon", { rotation: "+=360", duration: 1, ease: "none" }, "<");
       tl.to(processorRef.current, { borderColor: "rgba(255,255,255,0.1)", boxShadow: "none", duration: 0.2 });
 
       // Step 3: Result to Dashboard
@@ -98,44 +98,43 @@ export function DeveloperExperience() {
       tl.to(dashUpdateRef.current, { borderColor: "#22c55e", boxShadow: "0 0 20px rgba(34,197,94,0.5)", duration: 0.2 });
       
       // Update text in dashboard
-      tl.to(statusRef.current, { opacity: 0, duration: 0.1 });
-      tl.add(() => {
-        if (statusRef.current) {
-           statusRef.current.innerText = "Completed";
-           statusRef.current.className = "text-green-500 font-medium";
+      tl.to(statusRef.current, { 
+        opacity: 0, 
+        duration: 0.1, 
+        onComplete: () => {
+          if (statusRef.current) {
+            statusRef.current.innerText = "Completed";
+            statusRef.current.className = "text-green-500 font-medium";
+          }
         }
       });
-      tl.to(statusRef.current, { opacity: 1, duration: 0.1 });
-
-      tl.to(dashUpdateRef.current, { borderColor: "rgba(255,255,255,0.1)", boxShadow: "none", duration: 0.5 }, "+=1");
-
-      // Reset
-      tl.add(() => {
-        if (statusRef.current) {
-           statusRef.current.innerText = "Waiting...";
-           statusRef.current.className = "text-muted-foreground font-medium";
+      tl.to(statusRef.current, { opacity: 1, duration: 0.2 });
+      tl.to(dashUpdateRef.current, { borderColor: "rgba(255,255,255,0.1)", boxShadow: "none", duration: 0.5, delay: 0.5 });
+      
+      // Reset text after a few seconds
+      tl.to(statusRef.current, {
+        opacity: 0,
+        duration: 0.2,
+        delay: 2,
+        onComplete: () => {
+          if (statusRef.current) {
+            statusRef.current.innerText = "Waiting...";
+            statusRef.current.className = "text-muted-foreground";
+          }
         }
       });
+      tl.to(statusRef.current, { opacity: 1, duration: 0.2 });
+    };
 
-      // Bind button click to play
-      const btn = playButtonRef.current;
-      if (btn) {
-        btn.addEventListener("click", () => {
-          if (!tl.isActive()) tl.play(0);
-        });
-      }
+    const runBtn = playButtonRef.current;
+    if (runBtn) {
+      runBtn.addEventListener("click", animation.play);
+    }
 
-      // Auto play on scroll enter once
-      ScrollTrigger.create({
-        trigger: containerRef.current,
-        start: "top 50%",
-        once: true,
-        onEnter: () => tl.play(0)
-      });
-
-    }, containerRef);
-
-    return () => ctx.revert();
+    return () => {
+      if (runBtn) runBtn.removeEventListener("click", animation.play);
+      ctx.revert();
+    };
   }, []);
 
   return (

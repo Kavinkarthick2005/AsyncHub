@@ -20,6 +20,7 @@ export const metadata: Metadata = {
 import { ThemeProvider } from "@/providers/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryProvider } from "@/providers/query-provider";
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -43,6 +44,7 @@ export default function RootLayout({
           <QueryProvider>
             <TooltipProvider delay={0}>
               {children}
+              <Toaster position="bottom-right" theme="dark" />
             </TooltipProvider>
           </QueryProvider>
         </ThemeProvider>

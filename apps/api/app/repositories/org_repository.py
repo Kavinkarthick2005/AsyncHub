@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from app.models.organization import Organization, OrganizationMember
-from app.schemas.organization import OrganizationCreate
+from app.schemas.organization import OrganizationCreate, OrganizationUpdate
 from typing import List, Optional
 from uuid import UUID
 
@@ -43,6 +43,20 @@ class OrgRepository:
             role="owner"
         )
         self.session.add(member)
+        await self.session.commit()
+        await self.session.refresh(org)
+        return org
+
+    async def get_by_slug(self, slug: str) -> Optional[Organization]:
+        stmt = select(Organization).where(Organization.slug == slug)
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
+
+    async def update(self, org: Organization, obj_in: OrganizationUpdate) -> Organization:
+        if obj_in.name is not None:
+            org.name = obj_in.name
+        if obj_in.slug is not None:
+            org.slug = obj_in.slug
         await self.session.commit()
         await self.session.refresh(org)
         return org
