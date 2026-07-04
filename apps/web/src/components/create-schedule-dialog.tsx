@@ -12,7 +12,7 @@ import cronstrue from "cronstrue";
 
 interface CreateScheduleDialogProps {
   queueId: string;
-  trigger?: React.ReactNode;
+  trigger?: React.ReactElement;
 }
 
 type ScheduleType = "minutes" | "daily" | "weekly" | "monthly" | "custom";
@@ -99,9 +99,7 @@ export function CreateScheduleDialog({ queueId, trigger }: CreateScheduleDialogP
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || <Button>Create Schedule</Button>}
-      </DialogTrigger>
+      <DialogTrigger render={trigger || <Button>Create Schedule</Button>} />
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Create Schedule</DialogTitle>
@@ -123,7 +121,7 @@ export function CreateScheduleDialog({ queueId, trigger }: CreateScheduleDialogP
           
           <div className="space-y-2">
             <Label>Schedule Frequency</Label>
-            <Select value={scheduleType} onValueChange={(v) => setScheduleType(v as ScheduleType)}>
+            <Select value={scheduleType} onValueChange={(v) => v && setScheduleType(v as ScheduleType)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select frequency" />
               </SelectTrigger>
@@ -165,7 +163,7 @@ export function CreateScheduleDialog({ queueId, trigger }: CreateScheduleDialogP
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Day of Week</Label>
-                <Select value={weeklyDay} onValueChange={setWeeklyDay}>
+                <Select value={weeklyDay} onValueChange={(v) => v && setWeeklyDay(v)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

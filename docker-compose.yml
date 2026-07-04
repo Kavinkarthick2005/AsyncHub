@@ -32,7 +32,7 @@ services:
         condition: service_healthy
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/liveness"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -50,6 +50,18 @@ services:
       postgres:
         condition: service_healthy
     command: ["python", "-m", "app.workers.runner", "docker-worker"]
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   postgres_data:

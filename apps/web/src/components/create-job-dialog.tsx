@@ -12,7 +12,7 @@ import { Clock } from "lucide-react";
 
 interface CreateJobDialogProps {
   queueId: string;
-  trigger?: React.ReactNode;
+  trigger?: React.ReactElement;
 }
 
 export function CreateJobDialog({ queueId, trigger }: CreateJobDialogProps) {
@@ -77,9 +77,7 @@ export function CreateJobDialog({ queueId, trigger }: CreateJobDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || <Button>Create Job</Button>}
-      </DialogTrigger>
+      <DialogTrigger render={trigger || <Button>Create Job</Button>} />
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Enqueue Job</DialogTitle>
@@ -101,7 +99,7 @@ export function CreateJobDialog({ queueId, trigger }: CreateJobDialogProps) {
           
           <div className="space-y-2">
             <Label>Execution Time</Label>
-            <Select value={scheduleMode} onValueChange={setScheduleMode}>
+            <Select value={scheduleMode} onValueChange={(v) => v && setScheduleMode(v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Run Now" />
               </SelectTrigger>

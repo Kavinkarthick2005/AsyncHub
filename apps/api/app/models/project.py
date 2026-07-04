@@ -15,3 +15,5 @@ class Project(TimestampMixin, Base):
 
     organization: Mapped["Organization"] = relationship("Organization", back_populates="projects")
     queues: Mapped[List["Queue"]] = relationship("Queue", back_populates="project")
+    workflows: Mapped[List["Workflow"]] = relationship("Workflow", back_populates="project")
+   

@@ -1,18 +1,42 @@
 "use client";
 
+import React, { useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, Command, Server, Shield, Zap, GitBranch, Activity } from "lucide-react";
+import { Command } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useFadeIn, useStaggerFadeIn, useScrollReveal, useStaggerScrollReveal } from "@/animations";
+
+// Future imports for our new GSAP sections
+import { HeroSection } from "@/components/marketing/hero-section";
+import { NarrativeSection } from "@/components/marketing/narrative-section";
+import { DeveloperExperience } from "@/components/marketing/developer-experience";
+import { ArchitectureSection } from "@/components/marketing/architecture-section";
+import { HowItWorksTimeline } from "@/components/marketing/how-it-works-timeline";
+import { DashboardPreview } from "@/components/marketing/dashboard-preview";
+import { WorkflowPreview } from "@/components/marketing/workflow-preview";
+import { SchedulerDemo } from "@/components/marketing/scheduler-demo";
+
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export default function LandingPage() {
-  const heroRef = useStaggerFadeIn(0.1, 0, 0.8);
-  const overviewRef = useScrollReveal(0.2);
-  const buttonsRef = useStaggerFadeIn(0.1, 0.2);
-  const capabilitiesRef = useStaggerScrollReveal(0.1, 0.2);
+  useEffect(() => {
+    // Register GSAP plugins
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Respect reduced motion
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) {
+      gsap.ticker.fps(1); // minimal updates
+      // Alternatively, we can use gsap.matchMedia for more robust handling
+    }
+
+    return () => {
+      ScrollTrigger.getAll().forEach(t => t.kill());
+    };
+  }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+    <div className="flex min-h-screen flex-col bg-background text-foreground overflow-x-hidden">
       {/* Top Navigation */}
       <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex h-14 max-w-screen-xl items-center justify-between px-4">
@@ -23,8 +47,8 @@ export default function LandingPage() {
             <span className="font-bold tracking-tight">AsyncHub</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-            <Link href="#overview" className="text-muted-foreground hover:text-foreground transition-colors">Platform</Link>
-            <Link href="#capabilities" className="text-muted-foreground hover:text-foreground transition-colors">Features</Link>
+            <Link href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How it Works</Link>
+            <Link href="#architecture" className="text-muted-foreground hover:text-foreground transition-colors">Architecture</Link>
             <Link href="/docs" className="text-muted-foreground hover:text-foreground transition-colors">Docs</Link>
           </nav>
           <div className="flex items-center gap-4">
@@ -39,106 +63,47 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="relative overflow-hidden pt-32 pb-24 md:pt-48 md:pb-32">
-          <div className="container mx-auto max-w-screen-xl px-4 text-center" ref={heroRef}>
-            <div className="mx-auto flex max-w-fit items-center justify-center space-x-2 overflow-hidden rounded-full border border-border bg-muted/50 px-7 py-2 backdrop-blur transition-all hover:bg-muted/80">
-              <span className="text-sm font-medium">Introducing AsyncHub v1.0</span>
-            </div>
-            <h1 className="mt-8 text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl lg:text-8xl">
-              Reliable distributed <br className="hidden sm:block" />
-              <span className="text-muted-foreground">job orchestration.</span>
-            </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl">
-              Enterprise-grade background job processing, workflow orchestration, and scheduling for modern development teams.
-            </p>
-            <div className="flex flex-col gap-4 min-[400px]:flex-row justify-center mt-8 opacity-0" ref={buttonsRef}>
-              <Button size="lg" className="h-12 px-8 text-base" render={<Link href="/signup" />}>
-                Start Building Free
-              </Button>
-              <Button size="lg" variant="outline" className="h-12 px-8 text-base" render={<Link href="/docs" />}>
-                Read the Docs
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        {/* Platform Overview */}
-        <section id="overview" className="border-t border-border/50 py-24 bg-muted/20">
-          <div className="container mx-auto max-w-screen-xl px-4" ref={overviewRef}>
-            <div className="mx-auto max-w-3xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Built for precision and scale.</h2>
-              <p className="mt-4 text-lg text-muted-foreground">
-                Stop managing infrastructure. Start building features. AsyncHub provides the tools to manage millions of background jobs with zero operational overhead.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Core Capabilities */}
-        <section id="capabilities" className="py-24">
-          <div className="container mx-auto max-w-screen-xl px-4">
-            <div className="mb-16">
-              <h2 className="text-3xl font-bold tracking-tight">Core Capabilities</h2>
-              <p className="mt-2 text-muted-foreground">Everything you need to orchestrate complex background workloads.</p>
-            </div>
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3" ref={capabilitiesRef}>
-              {[
-                {
-                  icon: Server,
-                  title: "Distributed Workers",
-                  description: "Scale your worker nodes infinitely across regions with native load balancing and auto-scaling.",
-                },
-                {
-                  icon: GitBranch,
-                  title: "Complex Workflows",
-                  description: "Define DAGs for dependent jobs. Handle parallel execution, retries, and conditional branches effortlessly.",
-                },
-                {
-                  icon: Activity,
-                  title: "Real-time Observability",
-                  description: "Monitor job execution, latency, and throughput in real-time with granular metrics and logging.",
-                },
-                {
-                  icon: Shield,
-                  title: "Enterprise Security",
-                  description: "SOC2 compliant infrastructure with role-based access control, audit logs, and encrypted payloads.",
-                },
-                {
-                  icon: Zap,
-                  title: "Low Latency",
-                  description: "Optimized for sub-millisecond dispatch times ensuring high-priority jobs execute immediately.",
-                },
-                {
-                  icon: Command,
-                  title: "Developer First",
-                  description: "Type-safe SDKs, comprehensive CLI, and REST APIs designed for modern development workflows.",
-                },
-              ].map((feature, i) => (
-                <div key={i} className="group rounded-2xl border border-border/50 bg-card p-8 transition-colors hover:border-primary/50">
-                  <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <feature.icon className="h-6 w-6" />
-                  </div>
-                  <h3 className="mb-3 text-xl font-semibold">{feature.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <HeroSection />
+        <NarrativeSection />
+        <DeveloperExperience />
+        <HowItWorksTimeline />
+        <DashboardPreview />
+        <WorkflowPreview />
+        <SchedulerDemo />
+        <ArchitectureSection />
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border/50 bg-background py-12">
-        <div className="container mx-auto max-w-screen-xl px-4 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <Command className="size-5 text-primary" />
-            <span className="font-semibold tracking-tight">AsyncHub</span>
+      {/* Final CTA Footer */}
+      <footer className="border-t border-border/50 bg-background pt-24 pb-12 relative overflow-hidden">
+        <div className="container mx-auto max-w-screen-xl px-4 text-center relative z-10">
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
+            Ready to orchestrate millions of background jobs?
+          </h2>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
+            <Button size="lg" className="h-12 px-8 text-base bg-amber-600 hover:bg-amber-700 text-white" render={<Link href="/login" />}>
+              Launch Dashboard
+            </Button>
+            <Button size="lg" variant="outline" className="h-12 px-8 text-base" render={<Link href="/docs" />}>
+              Read Documentation
+            </Button>
           </div>
-          <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} AsyncHub Inc. All rights reserved.
-          </p>
+          
+          <div className="mt-32 pt-8 border-t border-border/50 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Command className="size-5 text-primary" />
+              <span className="font-semibold tracking-tight text-foreground">AsyncHub</span>
+            </div>
+            <div className="flex gap-4">
+              <Link href="https://github.com/asynchub" className="hover:text-foreground transition-colors">GitHub</Link>
+              <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+              <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+            </div>
+            <p>© {new Date().getFullYear()} AsyncHub Inc. All rights reserved.</p>
+          </div>
         </div>
+        
+        {/* Subtle background flair */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
       </footer>
     </div>
   );

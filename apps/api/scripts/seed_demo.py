@@ -1,154 +1,109 @@
 import asyncio
+import os
+import sys
 from datetime import datetime, timezone, timedelta
+from passlib.context import CryptContext
+
+# Add the parent directory to sys.path so we can import app modules
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from app.db.session import AsyncSessionLocal
+from app.models.organization import Organization
 from app.models.user import User
-from app.models.organization import Organization, OrganizationMember
 from app.models.project import Project
 from app.models.queue import Queue
-from app.models.job import Job
-from app.models.schedule import Schedule
 from app.models.worker import Worker, WorkerHeartbeat
-from sqlalchemy import select
-from app.core.security import get_password_hash
+from app.models.job import Job, JobEvent
+from app.models.schedule import Schedule
+from app.models.workflow import Workflow, WorkflowExecution
+from loguru import logger
 
-async def seed_demo_data():
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+async def seed_data():
+    logger.info("Starting database seed...")
     async with AsyncSessionLocal() as session:
-        print("Starting Demo Seed...")
-        
-        # 1. User
-        admin_email = "admin@asynchub.demo"
-        stmt = select(User).where(User.email == admin_email)
-        result = await session.execute(stmt)
-        user = result.scalars().first()
-        
-        if not user:
-            user = User(
-                email=admin_email,
-                hashed_password=get_password_hash("demo123")
-            )
-            session.add(user)
-            await session.commit()
-            await session.refresh(user)
-            print(f"Created Admin User: {admin_email} (demo123)")
-        
-        # 2. Organization
-        org_slug = "demo-inc"
-        stmt = select(Organization).where(Organization.slug == org_slug)
-        result = await session.execute(stmt)
-        org = result.scalars().first()
-        
-        if not org:
-            org = Organization(name="Demo Inc", slug=org_slug)
-            session.add(org)
-            await session.commit()
-            await session.refresh(org)
-            
-            member = OrganizationMember(
-                user_id=user.id,
-                org_id=org.id,
-                role="owner"
-            )
-            session.add(member)
-            await session.commit()
-            print("Created Organization: Demo Inc")
-        
-        # 3. Project
-        stmt = select(Project).where(Project.org_id == org.id, Project.name == "E-Commerce Pipeline")
-        result = await session.execute(stmt)
-        project = result.scalars().first()
-        
-        if not project:
-            project = Project(
-                name="E-Commerce Pipeline",
-                org_id=org.id
-            )
-            session.add(project)
-            await session.commit()
-            await session.refresh(project)
-            print("Created Project: E-Commerce Pipeline")
+        # 1. Create Organization
+        org = Organization(name="AsyncHub Inc.", slug="asynchub")
+        session.add(org)
+        await session.flush()
 
-        # 4. Queues
-        queues_data = [
-            {"name": "high-priority", "priority": 1},
-            {"name": "default", "priority": 5},
-            {"name": "batch-processing", "priority": 10},
-        ]
+        # 2. Create User
+        hashed_password = pwd_context.hash("demo123")
+        user = User(email="demo@asynchub.com", hashed_password=hashed_password, organization_id=org.id)
+        session.add(user)
+        await session.flush()
+
+        # 3. Create Projects
+        projects = {
+            "Email Service": Project(name="Email Service", organization_id=org.id, api_key="sk_demo_email"),
+            "Image Pipeline": Project(name="Image Pipeline", organization_id=org.id, api_key="sk_demo_image"),
+            "Data Processing": Project(name="Data Processing", organization_id=org.id, api_key="sk_demo_data")
+        }
+        for p in projects.values():
+            session.add(p)
+        await session.flush()
+
+        # 4. Create Queues
+        queues = {
+            "emails": Queue(name="emails", project_id=projects["Email Service"].id),
+            "images": Queue(name="images", project_id=projects["Image Pipeline"].id),
+            "analytics": Queue(name="analytics", project_id=projects["Data Processing"].id),
+            "reports": Queue(name="reports", project_id=projects["Data Processing"].id),
+            "notifications": Queue(name="notifications", project_id=projects["Email Service"].id)
+        }
+        for q in queues.values():
+            session.add(q)
+        await session.flush()
+
+        # 5. Create Workers
+        worker_names = ["worker-east-1", "worker-west-1", "worker-gpu", "worker-priority", "worker-east-2", "worker-west-2"]
+        workers = []
+        now = datetime.now(timezone.utc)
+        for w_name in worker_names:
+            w = Worker(name=w_name, status="online", last_heartbeat=now)
+            session.add(w)
+            workers.append(w)
+        await session.flush()
+
+        # Heartbeats
+        for w in workers:
+            session.add(WorkerHeartbeat(worker_id=w.id, last_seen=now))
+
+        # 6. Create Workflows
+        wf_image = Workflow(name="Image Processing", description="Resize and watermork images", project_id=projects["Image Pipeline"].id, definition={})
+        wf_onboard = Workflow(name="Customer Onboarding", description="Send emails and provision accounts", project_id=projects["Email Service"].id, definition={})
+        wf_reports = Workflow(name="Monthly Reports", description="Generate and email PDFs", project_id=projects["Data Processing"].id, definition={})
+        session.add_all([wf_image, wf_onboard, wf_reports])
+        await session.flush()
+
+        # 7. Create Scheduled Jobs
+        for i in range(8):
+            q = list(queues.values())[i % len(queues)]
+            s = Schedule(name=f"Cron {i}", project_id=q.project_id, queue_id=q.id, cron_expr="*/5 * * * *", payload={"task": "ping"})
+            session.add(s)
         
-        queues = {}
-        for qd in queues_data:
-            stmt = select(Queue).where(Queue.project_id == project.id, Queue.name == qd["name"])
-            result = await session.execute(stmt)
-            q = result.scalars().first()
-            if not q:
-                q = Queue(name=qd["name"], project_id=project.id, priority=qd["priority"])
-                session.add(q)
-                await session.commit()
-                await session.refresh(q)
-            queues[qd["name"]] = q
-            
-        print("Created Queues: high-priority, default, batch-processing")
+        # 8. Create Jobs
+        logger.info("Creating jobs... this may take a moment.")
+        
+        # 250 Jobs
+        jobs_to_create = 250
+        for idx in range(jobs_to_create):
+            q = list(queues.values())[idx % len(queues)]
+            status = "completed" if idx % 3 == 0 else "queued"
+            j = Job(name=f"Task {idx}", queue_id=q.id, status=status, payload={"index": idx}, created_at=now - timedelta(minutes=idx))
+            if status == "completed":
+                j.completed_at = now - timedelta(minutes=idx, seconds=-5)
+            session.add(j)
+        
+        # 20 Failed jobs
+        for idx in range(20):
+            q = queues["emails"]
+            j = Job(name=f"Failed Email {idx}", queue_id=q.id, status="dead", payload={"action": "fail"}, retries=3, max_retries=3, created_at=now - timedelta(hours=idx))
+            session.add(j)
 
-        # 5. Workers
-        workers_data = [
-            {"name": "worker-demo-alpha.local", "status": "online"},
-            {"name": "worker-demo-beta.local", "status": "offline"},
-        ]
-        import uuid
-        for wd in workers_data:
-            stmt = select(Worker).where(Worker.name == wd["name"])
-            res = await session.execute(stmt)
-            w = res.scalars().first()
-            if not w:
-                w = Worker(id=uuid.uuid4(), name=wd["name"], status=wd["status"])
-                session.add(w)
-                await session.commit()
-                await session.refresh(w)
-                
-                # Heartbeat
-                hb = WorkerHeartbeat(
-                    worker_id=w.id,
-                    last_seen=datetime.now(timezone.utc),
-                    metadata_={"cpu_usage": 45.2, "memory_usage": 1024}
-                )
-                session.add(hb)
-                await session.commit()
-
-        # 6. Jobs
-        print("Seeding Jobs...")
-        jobs = [
-            Job(queue_id=queues["high-priority"].id, name="Process Payment #8892", payload={"order_id": 8892, "amount": 149.99}, status="queued"),
-            Job(queue_id=queues["high-priority"].id, name="Send Order Confirmation", payload={"email": "customer@example.com"}, status="completed"),
-            Job(queue_id=queues["default"].id, name="Generate Invoice", payload={"order_id": 8892}, status="failed", retries=3),
-            Job(queue_id=queues["default"].id, name="Sync Inventory", payload={"sku": "TSHIRT-BLK-M"}, status="dead", retries=5),
-            Job(queue_id=queues["batch-processing"].id, name="Monthly Sync", payload={"month": "october"}, status="running")
-        ]
-        session.add_all(jobs)
         await session.commit()
-
-        # 7. Schedules
-        print("Seeding Schedules...")
-        schedules = [
-            Schedule(
-                name="Daily Sales Report",
-                queue_id=queues["default"].id,
-                cron_expression="0 0 * * *",
-                payload_template={"task": "sales_report", "format": "pdf"},
-                is_active=True,
-                next_run_at=datetime.now(timezone.utc) + timedelta(hours=5)
-            ),
-            Schedule(
-                name="Weekly Database Backup",
-                queue_id=queues["batch-processing"].id,
-                cron_expression="0 2 * * 0",
-                payload_template={"task": "db_backup", "target": "s3://backups"},
-                is_active=False
-            )
-        ]
-        session.add_all(schedules)
-        await session.commit()
-        
-        print("Demo Data Seeded Successfully!")
-        print("Login with: admin@asynchub.demo / demo123")
+        logger.info("Demo data seeded successfully!")
 
 if __name__ == "__main__":
-    asyncio.run(seed_demo_data())
+    asyncio.run(seed_data())

@@ -4,6 +4,7 @@ from .organization import OrganizationCreate, OrganizationResponse, Organization
 from .project import ProjectCreate, ProjectResponse
 from .queue import QueueCreate, QueueResponse, QueueUpdate
 from .job import JobCreate, JobResponse, JobEventResponse
+from .workflow import WorkflowCreate, WorkflowUpdate, WorkflowResponse, ValidationResult
 
 __all__ = [
     "UserCreate", "UserResponse",
@@ -11,5 +12,7 @@ __all__ = [
     "OrganizationCreate", "OrganizationResponse", "OrganizationMemberResponse",
     "ProjectCreate", "ProjectResponse",
     "QueueCreate", "QueueResponse", "QueueUpdate",
-    "JobCreate", "JobResponse", "JobEventResponse"
+    "JobCreate", "JobResponse", "JobEventResponse",
+    "WorkflowCreate", "WorkflowUpdate", "WorkflowResponse", "ValidationResult",
+    "WorkflowExecuteRequest", "WorkflowExecutionResponse"
 ]

@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useFadeIn } from "@/animations";
 import { useParams } from "next/navigation";
 
-export default function JobDetailPage() {
+export default function JobDetailPage(props: { params: Promise<{ jobId: string }> }) {
   const params = useParams();
   const jobId = params.jobId as string;
   const containerRef = useFadeIn(0.1);

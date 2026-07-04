@@ -30,6 +30,11 @@ class Job(TimestampMixin, Base):
     events: Mapped[List["JobEvent"]] = relationship("JobEvent", back_populates="job", cascade="all, delete-orphan")
     executions: Mapped[List["JobExecution"]] = relationship("JobExecution", back_populates="job", cascade="all, delete-orphan")
 
+    workflow_execution_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("workflow_executions.id", ondelete="SET NULL"), nullable=True)
+    workflow_node_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    
+    workflow_execution: Mapped[Optional["WorkflowExecution"]] = relationship("WorkflowExecution", back_populates="jobs")
+
 class JobEvent(Base):
     __tablename__ = "job_events"
 

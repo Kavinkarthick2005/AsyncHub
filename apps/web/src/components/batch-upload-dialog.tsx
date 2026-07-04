@@ -10,7 +10,7 @@ import Papa from "papaparse";
 
 interface BatchUploadDialogProps {
   queueId: string;
-  trigger?: React.ReactNode;
+  trigger?: React.ReactElement;
 }
 
 export function BatchUploadDialog({ queueId, trigger }: BatchUploadDialogProps) {
@@ -114,9 +114,7 @@ export function BatchUploadDialog({ queueId, trigger }: BatchUploadDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        {trigger || <Button variant="outline"><Upload className="mr-2 h-4 w-4" /> Batch Upload</Button>}
-      </DialogTrigger>
+      <DialogTrigger render={trigger || <Button variant="outline"><Upload className="mr-2 h-4 w-4" /> Batch Upload</Button>} />
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Batch Upload Jobs</DialogTitle>

@@ -9,6 +9,7 @@ from app.models.retry import RetryPolicy
 from app.models.schedule import Schedule
 from app.models.audit import AuditLog
 from app.models.notification import Notification
+from app.models.workflow import Workflow
 
 __all__ = [
     "TimestampMixin",
@@ -24,6 +25,7 @@ __all__ = [
     "WorkerHeartbeat",
     "RetryPolicy",
     "Schedule",
+    "Workflow",
     "AuditLog",
-    "Notification"
+    "Notification",
 ]

@@ -28,6 +28,26 @@ async def _listen_loop():
                         
                     if org_id:
                         asyncio.create_task(manager.broadcast("org", org_id, data))
+                        
+                    # Hook into workflow orchestration for completed/failed jobs
+                    to_status = payload_data.get("to_status")
+                    job_id = payload_data.get("job_id")
+                    
+                    if job_id and to_status in ("completed", "failed"):
+                        async def process_workflow_event():
+                            from app.db.session import AsyncSessionLocal
+                            from app.services.workflow_engine_service import WorkflowEngineService
+                            from app.repositories.job_repository import JobRepository
+                            
+                            async with AsyncSessionLocal() as session:
+                                job_repo = JobRepository(session)
+                                job = await job_repo.get_by_id(job_id)
+                                if job and job.workflow_execution_id:
+                                    engine = WorkflowEngineService(session)
+                                    await engine.handle_job_completion(job)
+                                    
+                        asyncio.create_task(process_workflow_event())
+                        
                 except Exception as e:
                     logger.error(f"Error handling notification: {e}")
 

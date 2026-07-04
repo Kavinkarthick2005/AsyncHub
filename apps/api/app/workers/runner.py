@@ -16,8 +16,7 @@ from app.models.job import Job, JobEvent
 from app.models.queue import Queue
 from app.models.worker import Worker, WorkerHeartbeat
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-logger = logging.getLogger("worker_engine")
+from loguru import logger
 
 class WorkerEngine:
     def __init__(self, name: str = None):
@@ -32,7 +31,7 @@ class WorkerEngine:
         session.add(worker)
         await session.flush()
         self.worker_id = worker.id
-        logger.info(f"Worker {self.name} registered with ID: {self.worker_id}")
+        logger.info(f"Worker registered", worker_id=str(self.worker_id), worker_name=self.name)
 
     async def deregister(self, session: AsyncSession):
         if not self.worker_id:
@@ -48,7 +47,8 @@ class WorkerEngine:
             worker.current_job_id = None
         
         await session.commit()
-        logger.info(f"Worker {self.name} marked offline.")
+        await session.commit()
+        logger.info("Worker marked offline.", worker_name=self.name)
 
     async def heartbeat_and_recovery_loop(self):
         """Runs periodically to send heartbeats and recover dead workers."""
@@ -80,7 +80,8 @@ class WorkerEngine:
                     dead_workers = dead_workers_result.scalars().all()
                     
                     for dead_worker in dead_workers:
-                        logger.warning(f"Recovering dead worker {dead_worker.name} ({dead_worker.id})")
+                    for dead_worker in dead_workers:
+                        logger.warning("Recovering dead worker", dead_worker_name=dead_worker.name, dead_worker_id=str(dead_worker.id))
                         dead_worker.status = "offline"
                         
                         if dead_worker.current_job_id:
@@ -90,7 +91,8 @@ class WorkerEngine:
                             job = job_res.scalars().first()
                             
                             if job and job.status == "running":
-                                logger.info(f"Requeueing job {job.id} from dead worker {dead_worker.id}")
+                            if job and job.status == "running":
+                                logger.info("Requeueing job from dead worker", job_id=str(job.id), dead_worker_id=str(dead_worker.id))
                                 job.status = "queued"
                                 job.run_after = datetime.now(timezone.utc)
                                 
@@ -128,14 +130,15 @@ class WorkerEngine:
             
         return now + timedelta(seconds=delay_seconds)
 
-    async def execute_job(self, payload: dict):
+    async def execute_job(self, payload: dict, job_id: uuid.UUID):
         """Simulate work."""
-        logger.info(f"Executing job with payload: {payload}")
+        job_logger = logger.bind(job_id=str(job_id), worker_name=self.name)
+        job_logger.info(f"Executing job with payload: {payload}")
         if payload:
             if payload.get("action") == "fail_me":
                 raise RuntimeError("Simulated job failure requested by payload")
             elif payload.get("action") == "crash_worker":
-                logger.critical("Simulating hard crash! Process exiting without cleanup.")
+                job_logger.critical("Simulating hard crash! Process exiting without cleanup.")
                 import os
                 os._exit(1)
         
@@ -176,7 +179,8 @@ class WorkerEngine:
                         continue
                     
                     # Claim job
-                    logger.info(f"Claimed job {job.id} (name: {job.name})")
+                    # Claim job
+                    logger.info("Claimed job", job_id=str(job.id), job_name=job.name, worker_name=self.name)
                     job.status = "running"
                     job.started_at = now
                     
@@ -204,12 +208,12 @@ class WorkerEngine:
                 success = False
                 error_msg = None
                 try:
-                    await self.execute_job(job.payload)
+                    await self.execute_job(job.payload, job.id)
                     success = True
                 except Exception as e:
                     success = False
                     error_msg = str(e)
-                    logger.error(f"Job {job.id} failed: {e}")
+                    logger.error("Job failed", job_id=str(job.id), error=error_msg, worker_name=self.name)
                 
                 # Record result
                 async with AsyncSessionLocal() as session:
@@ -225,7 +229,8 @@ class WorkerEngine:
                         db_job.completed_at = datetime.now(timezone.utc)
                         event = JobEvent(job_id=db_job.id, from_status="running", to_status="completed", message="Job completed successfully")
                         session.add(event)
-                        logger.info(f"Job {db_job.id} completed.")
+                        session.add(event)
+                        logger.info("Job completed", job_id=str(db_job.id), worker_name=self.name)
                     else:
                         db_job.retries += 1
                         if db_job.retries <= db_job.max_retries:
@@ -233,12 +238,14 @@ class WorkerEngine:
                             db_job.run_after = await self._calculate_run_after(db_job, db_job.queue)
                             event = JobEvent(job_id=db_job.id, from_status="running", to_status="queued", message=f"Failed (attempt {db_job.retries}): {error_msg}. Retrying.")
                             session.add(event)
-                            logger.info(f"Job {db_job.id} requeued for retry {db_job.retries}/{db_job.max_retries}.")
+                            session.add(event)
+                            logger.info("Job requeued for retry", job_id=str(db_job.id), retries=db_job.retries, max_retries=db_job.max_retries, worker_name=self.name)
                         else:
                             db_job.status = "dead"
                             event = JobEvent(job_id=db_job.id, from_status="running", to_status="dead", message=f"Max retries exceeded. Final error: {error_msg}")
                             session.add(event)
-                            logger.error(f"Job {db_job.id} marked as dead.")
+                            session.add(event)
+                            logger.error("Job marked as dead", job_id=str(db_job.id), worker_name=self.name)
                     
                     # Clear worker state
                     self.current_job_id = None

@@ -1,93 +1,107 @@
-# AsyncHub
+<div align="center">
+  <h1>AsyncHub</h1>
+  <p><strong>A Distributed Job Scheduling, Queue Management, and Workflow Orchestration Platform</strong></p>
+  
+  ![AsyncHub Hero](/docs/assets/hero.png)
+  
+  [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+  [![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+  [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+  [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+</div>
 
-![Architecture Diagram](docs/diagram/architecture_diagram.png)
+---
 
-AsyncHub is a high-performance, distributed background job scheduling and execution platform. Designed as an enterprise-grade SaaS boilerplate, it leverages PostgreSQL for both persistent storage and message brokering, eliminating the need for complex external infrastructure like RabbitMQ or Redis for MVP deployments.
+## 📖 Project Overview
+AsyncHub is an open-source, full-stack distributed systems platform designed to orchestrate complex background jobs, execute DAG-based workflows, and provide complete operational visibility through a modern, real-time dashboard.
 
-## Core Architecture
+Built for resiliency and scale, it utilizes PostgreSQL `SKIP LOCKED` concurrency control to enable a distributed worker fleet without requiring an external message broker like RabbitMQ or Redis, keeping the architecture highly cohesive and easy to deploy.
 
-AsyncHub is built around four core pillars:
+### 🏛️ Architecture
+![Architecture Diagram](/docs/assets/architecture.png)
 
-1.  **API Gateway (FastAPI):** A high-performance REST API that handles HTTP requests, authentication (JWT), RBAC, and job lifecycle management.
-2.  **Worker Engine (Python/Asyncio):** A standalone, horizontally scalable consumer that polls for jobs using atomic `SKIP LOCKED` queries, guaranteeing exactly-once execution without needing a dedicated broker like RabbitMQ or Redis.
-3.  **Scheduler Engine (Python/Asyncio):** A standalone daemon that evaluates cron expressions (`croniter`), manages recurring schedules, and securely dispatches delayed jobs in an atomic, crash-proof transaction.
-4.  **Database Engine (PostgreSQL):** Acts as the single source of truth for both state and message queuing. It relies on standard relational features plus advanced triggers and JSONB columns.
+## 🚀 The Problem & Solution
+**The Problem**: Traditional background job systems often obscure failure. When a job drops, tracking the dead-letter queues, analyzing throughput, or orchestrating dependent jobs (DAGs) requires cobbling together multiple tools (like Celery + Flower + Airflow). 
+
+**The Solution**: AsyncHub provides an out-of-the-box control plane. It marries the simplicity of queue-based workers with the power of visual DAG workflow orchestration. It offers:
+- **Instant Observability:** Real-time dashboards, metrics, and worker heartbeats.
+- **Reliability:** Built-in retry policies, exponential backoffs, and Dead Letter Queues (DLQ).
+- **Extensibility:** Multi-tenant (Organizations & Projects), enabling platform-as-a-service usage.
 
 ## ✨ Features
+- **Distributed Worker Fleet**: Spin up `N` workers that safely concurrently poll for jobs.
+- **DAG Workflow Engine**: Build and execute complex node-based workflows.
+- **React Flow Editor**: A beautiful, interactive drag-and-drop workflow canvas.
+- **Cron Scheduling**: Schedule recurring jobs with standard cron syntax.
+- **Real-Time Observability**: Live metrics, queue depths, and worker statuses.
+- **Multi-Tenancy**: Isolate environments using Organizations and Projects with unique API Keys.
 
-- **Multi-Tenant by Design:** Out-of-the-box support for isolated Organizations, Projects, and Queues with Role-Based Access Control (RBAC).
-- **Zero-Dependency Queues:** Utilizes PostgreSQL's `FOR UPDATE SKIP LOCKED` mechanism for safe, highly-concurrent job claiming.
-- **Dead Letter Queue (DLQ):** Automatic routing of exhausted jobs to a DLQ for manual inspection and replay.
-- **Comprehensive Observability:** Granular `JobEvent` and `JobExecution` logs track every state transition, worker assignment, and error traceback.
-- **Modern Dashboard:** A sleek Next.js (App Router) interface built with Tailwind CSS, Radix UI, and GSAP animations.
-- **Global Command Palette:** Instantly navigate workspaces and resources using `⌘K`.
+![Demo GIF](/docs/assets/demo.gif)
 
-## 🛠 Tech Stack
-
-**Backend (Control Plane & Workers)**
-- Python 3.10+
-- FastAPI (REST API)
-- SQLAlchemy (asyncpg) + Alembic
-- PostgreSQL (Supabase)
-- PyJWT & Passlib (Authentication)
-
-**Frontend (Dashboard)**
-- Next.js 14 (App Router)
-- React Query (Server State)
-- Tailwind CSS & Shadcn/UI (Design System)
-- GSAP (Animations)
-- Lucide React (Icons)
+## 🛠️ Tech Stack
+- **Backend:** Python, FastAPI, SQLAlchemy, Pydantic, Loguru, Alembic, PostgreSQL (asyncpg).
+- **Frontend:** TypeScript, Next.js 16 (Turbopack), TailwindCSS, Shadcn UI, Zustand, `@xyflow/react` (React Flow), GSAP (Animations).
+- **Infrastructure:** Docker, Docker Compose, GitHub Actions.
 
 ## 📁 Folder Structure
-
 ```
 AsyncHub/
 ├── apps/
-│   ├── api/                 # FastAPI Backend & Worker Engine
-│   └── web/                 # Next.js Frontend Dashboard
-├── docs/                    # Architecture & Design Decisions
+│   ├── api/                 # FastAPI Backend
+│   │   ├── app/             # Application code (models, routes, worker engine)
+│   │   ├── alembic/         # Database migrations
+│   │   └── scripts/         # Utility scripts (seed_demo.py)
+│   └── web/                 # Next.js Frontend
+│       ├── src/app/         # Next.js App Router (Dashboard, Auth, Marketing)
+│       └── src/components/  # UI Components & React Flow Nodes
+├── docs/                    # Architectural and deployment documentation
+├── docker-compose.yml       # Production/Local orchestrator
+└── Makefile                 # Convenient command runner
 ```
 
-## 🚀 Quick Start
+## ⚙️ Guide: Local Setup
 
-### 1. Backend Setup
+### Prerequisites
+- Docker & Docker Compose
+- Node.js 18+ (for local frontend dev)
+- Python 3.11+ (for local backend dev)
+
+### The "One-Click" Demo (Recommended for Reviewers)
+Want to see the system alive immediately with realistic data?
 ```bash
-cd apps/api
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-
-# Create .env file based on .env.example
-# Run migrations
-alembic upgrade head
-
-# Start the API server
-uvicorn app.main:app --reload
-
-# In a separate terminal, start a worker
-python -m app.workers.runner worker-1
+make demo
 ```
+*This command boots the entire stack via Docker and runs a Python seeder that creates organizations, projects, queues, workers, workflows, and 250+ jobs.*
+**Visit: http://localhost:3000** (Login with `demo@asynchub.com` / `demo123`)
 
-### 2. Frontend Setup
+### Standard Docker Setup
 ```bash
-cd apps/web
-npm install
-
-# Start the development server
-npm run dev
+make up
 ```
+*Starts API (8000), Web (3000), Postgres (5432), and 2 Background Workers.*
 
-Navigate to `http://localhost:3000` to view the application.
+## 🗄️ Database
+AsyncHub uses **PostgreSQL**.
+- **Concurrency**: `SELECT ... FOR UPDATE SKIP LOCKED` ensures multiple distributed workers can claim jobs without deadlocks or race conditions.
+- **Real-time**: Postgres `LISTEN/NOTIFY` channels broadcast job completion events back to the FastAPI websocket manager, updating the Next.js UI in real-time.
+- **Schema**: See [Database.md](/docs/Database.md) for the full ER Diagram.
 
-## 🗺 Roadmap
-- [x] Multi-tenant Data Model
-- [x] JWT Authentication & Session Refresh
-- [x] Worker Engine (`SKIP LOCKED`)
-- [x] Dead Letter Queue & Replay
-- [x] Cron & Delayed Job Scheduling
-- [ ] Live Workers Dashboard
-- [ ] Realtime Job Status via WebSockets (`LISTEN / NOTIFY`)
-- [ ] API Key Generation for External Dispatch
+## 🎼 Orchestrator Guide (Workflows)
+The Workflow Engine evaluates directed acyclic graphs (DAGs) stored in Postgres as `JSONB`.
+1. A user builds a DAG in the Next.js React Flow editor.
+2. The definition is stored with a `definition_version`.
+3. When triggered, the backend calculates the "root" nodes (in-degree = 0) and enqueues them.
+4. As workers complete jobs, the engine resolves dependencies and enqueues subsequent nodes.
+- See [WorkflowEngine.md](/docs/WorkflowEngine.md) for deep dive.
 
-## 📄 License
-This project is licensed under the MIT License.
+## 🧪 Testing & CI/CD
+Every pull request is evaluated by GitHub Actions:
+- **Linting & Formatting:** Ensures consistent code style.
+- **Type Checking:** Strict TypeScript & Mypy verification.
+- **Alembic Validation:** Verifies database migrations.
+- **Docker Compose Validation:** Ensures the environment boots successfully.
+
+---
+<div align="center">
+  <p>Built with ❤️ for modern background task orchestration.</p>
+</div>

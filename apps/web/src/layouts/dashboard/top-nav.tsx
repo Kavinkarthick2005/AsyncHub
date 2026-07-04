@@ -4,7 +4,8 @@ import * as React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Bell, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Bell, Search, Activity, Server, Clock, AlertCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -14,13 +15,42 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Settings, User as UserIcon } from "lucide-react";
+import { LogOut, Settings, User as UserIcon, Building2, Briefcase } from "lucide-react";
 import { useWorkspace } from "@/providers/workspace-provider";
 import { useQuery } from "@tanstack/react-query";
 import { fetchApi } from "@/lib/api-client";
 
 export function TopNav() {
-  const { activeOrg, isLoadingOrgs } = useWorkspace();
+  const { activeOrgId, activeOrg, isLoadingOrgs } = useWorkspace();
+  const [notifications, setNotifications] = React.useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = React.useState(0);
+  const router = useRouter();
+
+  React.useEffect(() => {
+    if (!activeOrgId) return;
+
+    const token = localStorage.getItem("asynchub_token");
+    if (!token) return;
+
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const host = process.env.NEXT_PUBLIC_API_URL?.replace("http://", "")?.replace("https://", "") || "localhost:8000";
+    const wsUrl = `${protocol}//${host}/api/v1/ws/orgs/${activeOrgId}?token=${token}`;
+
+    const ws = new WebSocket(wsUrl);
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === "connection.established" || data.type === "pong") return;
+      
+      // Treat failures as notifications
+      if (data.type === "job.status_changed" && data.payload?.to_status === "failed") {
+        setNotifications((prev) => [{...data, id: Date.now()}, ...prev].slice(0, 10));
+        setUnreadCount((c) => c + 1);
+      }
+    };
+
+    return () => ws.close();
+  }, [activeOrgId]);
 
   const { data: user } = useQuery({
     queryKey: ["userMe"],
@@ -61,10 +91,51 @@ export function TopNav() {
             <span className="text-xs">⌘</span>K
           </kbd>
         </div>
-        <button className="relative flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted text-muted-foreground transition-colors">
-          <Bell className="h-4 w-4" />
-          <span className="absolute right-2 top-2 flex h-2 w-2 rounded-full bg-primary" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger render={
+            <button className="relative flex h-8 w-8 items-center justify-center rounded-full hover:bg-muted text-muted-foreground transition-colors outline-none">
+              <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <span className="absolute right-1 top-1 flex h-3 w-3 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          } />
+          <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuLabel className="flex justify-between items-center">
+              <span>Notifications</span>
+              {unreadCount > 0 && (
+                <button 
+                  onClick={() => setUnreadCount(0)}
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Mark all read
+                </button>
+              )}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <div className="max-h-[300px] overflow-y-auto">
+              {notifications.length === 0 ? (
+                <div className="p-4 text-center text-sm text-muted-foreground">
+                  No new notifications
+                </div>
+              ) : (
+                notifications.map((n) => (
+                  <DropdownMenuItem key={n.id} className="flex flex-col items-start p-3 gap-1 cursor-default focus:bg-transparent">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-destructive" />
+                      <span className="font-semibold text-sm">Job Failed</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground line-clamp-2">
+                      Job {n.payload?.job_id} encountered an error.
+                    </span>
+                  </DropdownMenuItem>
+                ))
+              )}
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <DropdownMenu>
           <DropdownMenuTrigger render={<button className="outline-none focus:outline-none" />}>
             <Avatar className="h-8 w-8 rounded-lg cursor-pointer ring-1 ring-border">
@@ -82,13 +153,21 @@ export function TopNav() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => router.push("/settings")}>
               <UserIcon className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => router.push("/settings")}>
+              <Building2 className="mr-2 h-4 w-4" />
+              <span>Organization</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => router.push("/settings")}>
+              <Briefcase className="mr-2 h-4 w-4" />
+              <span>Workspace</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => router.push("/settings")}>
               <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
+              <span>Preferences</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => {

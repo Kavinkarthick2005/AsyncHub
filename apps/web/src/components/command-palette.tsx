@@ -43,7 +43,10 @@ export function CommandPalette() {
 
   const runCommand = React.useCallback((command: () => void) => {
     setOpen(false);
-    command();
+    // Defer the route change to avoid cmdk "subscribe" crash during unmount transition in React 19
+    setTimeout(() => {
+      command();
+    }, 50);
   }, []);
 
   return (
