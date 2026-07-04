@@ -1,4 +1,5 @@
-export const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
+const _API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+export const API_BASE_URL = `${_API_URL.replace(/\/$/, '')}/api/v1`;
 
 export async function fetchApi(endpoint: string, options: RequestInit = {}): Promise<any> {
   let token = typeof window !== "undefined" ? localStorage.getItem("token") : null;

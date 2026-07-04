@@ -26,7 +26,10 @@ export function useQueueSocket({ queueId, token, onConnected, onDisconnected }: 
       // Exponential backoff capped at 30 seconds
       const backoffDelay = Math.min(1000 * Math.pow(2, reconnectAttempt), 30000);
       
-      const wsUrl = `ws://127.0.0.1:8000/api/v1/ws/queues/${queueId}?token=${token}`;
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+      const wsProtocol = baseUrl.startsWith("https") ? "wss" : "ws";
+      const wsBase = baseUrl.replace(/^https?/, wsProtocol).replace(/\/$/, "");
+      const wsUrl = `${wsBase}/api/v1/ws/queues/${queueId}?token=${token}`;
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
