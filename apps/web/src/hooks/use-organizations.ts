@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchApi } from "@/lib/api-client";
 import { useWorkspace } from "@/providers/workspace-provider";
-import { Organization } from "@/types";
+import { Organization } from "@/providers/workspace-provider";
 
 export function useCreateOrganization() {
   const queryClient = useQueryClient();

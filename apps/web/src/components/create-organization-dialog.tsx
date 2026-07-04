@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCreateOrganization, useUpdateOrganization } from "@/hooks/use-organizations";
-import { Organization } from "@/types";
+import { Organization } from "@/providers/workspace-provider";
 import { toast } from "sonner";
 
 interface CreateOrganizationDialogProps {

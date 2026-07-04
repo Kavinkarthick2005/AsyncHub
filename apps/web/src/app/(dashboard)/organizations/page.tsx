@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { CreateOrganizationDialog } from "@/components/create-organization-dialog";
 import { Edit2 } from "lucide-react";
 import { useState } from "react";
-import { Organization } from "@/types";
+import { Organization } from "@/providers/workspace-provider";
 
 export default function OrganizationsPage() {
   const containerRef = useStaggerFadeIn(0.1, 0, 0.5);
