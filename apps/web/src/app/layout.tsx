@@ -40,7 +40,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <QueryProvider>
-            <TooltipProvider delayDuration={0}>
+            <TooltipProvider delay={0}>
               {children}
             </TooltipProvider>
           </QueryProvider>

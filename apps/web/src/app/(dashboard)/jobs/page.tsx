@@ -158,10 +158,8 @@ export default function JobsPage() {
                         {new Date(job.created_at).toLocaleString()}
                       </div>
                       <div className="text-right">
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/jobs/${job.id}`}>
-                            <Eye className="mr-2 h-4 w-4" /> View
-                          </Link>
+                        <Button variant="ghost" size="sm" render={<Link href={`/jobs/${job.id}`} />}>
+                          <Eye className="mr-2 h-4 w-4" /> View
                         </Button>
                       </div>
                     </div>

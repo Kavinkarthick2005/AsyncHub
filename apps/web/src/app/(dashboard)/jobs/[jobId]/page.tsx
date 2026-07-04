@@ -52,8 +52,8 @@ export default function JobDetailPage() {
       <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
         <AlertCircle className="h-10 w-10 text-destructive" />
         <h2 className="text-xl font-semibold">Failed to load job details</h2>
-        <Button variant="outline" asChild>
-          <Link href="/jobs">Back to Jobs</Link>
+        <Button variant="outline" render={<Link href="/jobs" />}>
+          Back to Jobs
         </Button>
       </div>
     );
@@ -64,10 +64,8 @@ export default function JobDetailPage() {
   return (
     <div className="flex flex-col gap-6" ref={containerRef}>
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/jobs">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
+        <Button variant="ghost" size="icon" render={<Link href="/jobs" />}>
+          <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">

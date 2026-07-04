@@ -8,6 +8,7 @@ import { useFadeIn, useStaggerFadeIn } from "@/animations";
 export default function LandingPage() {
   const heroRef = useStaggerFadeIn(0.1, 0, 0.8);
   const overviewRef = useFadeIn(0.2);
+  const buttonsRef = useStaggerFadeIn(0.1, 0.2);
   const capabilitiesRef = useStaggerFadeIn(0.1, 0.4);
 
   return (
@@ -30,8 +31,8 @@ export default function LandingPage() {
             <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground">
               Log in
             </Link>
-            <Button asChild size="sm">
-              <Link href="/signup">Get Started</Link>
+            <Button size="sm" render={<Link href="/signup" />}>
+              Get Started
             </Button>
           </div>
         </div>
@@ -51,14 +52,12 @@ export default function LandingPage() {
             <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl">
               Enterprise-grade background job processing, workflow orchestration, and scheduling for modern development teams.
             </p>
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" asChild className="h-12 px-8 text-base">
-                <Link href="/dashboard">
-                  Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
+            <div className="flex flex-col gap-4 min-[400px]:flex-row justify-center mt-8 opacity-0" ref={buttonsRef}>
+              <Button size="lg" className="h-12 px-8 text-base" render={<Link href="/signup" />}>
+                Start Building Free
               </Button>
-              <Button size="lg" variant="outline" asChild className="h-12 px-8 text-base">
-                <Link href="/docs">View Documentation</Link>
+              <Button size="lg" variant="outline" className="h-12 px-8 text-base" render={<Link href="/docs" />}>
+                Read the Docs
               </Button>
             </div>
           </div>
