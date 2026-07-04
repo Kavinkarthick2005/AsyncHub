@@ -219,4 +219,28 @@ asynchub/
 - **Milestone 6: Enterprise Readiness** - RBAC, Audit Logs, API Key management, AI Diagnostics.
 
 ---
+
+## 15. Core Domain & Policy Decisions (ADR)
+
+This section acts as the single source of truth for domain decisions to prevent architectural drift.
+
+### 15.1 RBAC Rules (Organization Roles)
+The `OrganizationMember.role` determines permissions:
+- **Viewer**: Read-only access to organizations, projects, queues, and jobs.
+- **Developer**: Can create projects and queues, and enqueue jobs. Cannot manage queue lifecycle (pause/resume).
+- **Admin**: Full control over queues (pause/resume/delete) and members, minus billing/ownership.
+- **Owner**: Full control.
+
+### 15.2 Job Lifecycle & Tracking
+We separate auditing from execution metrics to ensure lightweight status tracking and heavy execution logging do not collide.
+- **JobEvent**: A lightweight audit trail of state transitions (e.g., `queued` ➔ `claimed` ➔ `running` ➔ `completed`). Represents "What happened to this job?"
+- **JobExecution**: A heavy record of an actual execution attempt. Includes `worker_id`, `started_at`, `completed_at`, `duration_ms`, `error`, `logs`, and `output`. Represents "How did this execution perform?"
+
+### 15.3 Atomicity Guarantees
+- The `enqueue_job()` service method MUST be fully transactional. The creation of a `Job` row and its initial `JobEvent` (status: `queued`) must occur within a single database transaction. A failure in either must rollback both.
+
+### 15.4 Idempotency
+- The `Job` model includes an `idempotency_key` field. This ensures that clients retrying timeout requests will not accidentally enqueue duplicate jobs.
+
+---
 *End of Blueprint*
