@@ -11,19 +11,32 @@ import { AlertCircle, RefreshCcw, Eye } from "lucide-react";
 import { useStaggerFadeIn } from "@/animations";
 import Link from "next/link";
 
-const PROJECT_ID = typeof window !== "undefined" ? localStorage.getItem("projectId") : null;
-const TOKEN = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+import { useWorkspace } from "@/providers/workspace-provider";
+import { CreateJobDialog } from "@/components/create-job-dialog";
+import { BatchUploadDialog } from "@/components/batch-upload-dialog";
 
 export default function JobsPage() {
   const containerRef = useStaggerFadeIn(0.1, 0, 0.5);
   const [selectedQueue, setSelectedQueue] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  
+  const { activeOrgId } = useWorkspace();
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  // Fetch projects for the active organization
+  const { data: projects } = useQuery({
+    queryKey: ["projects", activeOrgId],
+    queryFn: () => fetchApi(`/organizations/${activeOrgId}/projects`),
+    enabled: !!activeOrgId,
+  });
+
+  const projectId = projects?.[0]?.id || null;
 
   // Fetch queues for the dropdown
   const { data: queues, isLoading: isLoadingQueues } = useQuery({
-    queryKey: ["queues", PROJECT_ID],
-    queryFn: () => fetchApi(`/projects/${PROJECT_ID}/queues`),
-    enabled: !!PROJECT_ID,
+    queryKey: ["queues", projectId],
+    queryFn: () => fetchApi(`/projects/${projectId}/queues`),
+    enabled: !!projectId,
   });
 
   // Automatically select the first queue if none is selected
@@ -47,7 +60,7 @@ export default function JobsPage() {
   // Hook up WebSocket for live updates
   useQueueSocket({
     queueId: selectedQueue || "",
-    token: TOKEN,
+    token: token,
   });
 
   const getStatusBadge = (status: string) => {
@@ -60,7 +73,7 @@ export default function JobsPage() {
     }
   };
 
-  if (!PROJECT_ID) {
+  if (!projectId) {
     return (
       <div className="flex items-center justify-center h-[50vh]">
         <div className="text-center space-y-2">
@@ -76,9 +89,19 @@ export default function JobsPage() {
 
   return (
     <div className="flex flex-col gap-6" ref={containerRef}>
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Job Explorer</h1>
-        <p className="text-muted-foreground mt-2">View and manage individual job executions.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Job Explorer</h1>
+          <p className="text-muted-foreground mt-2">View and manage individual job executions.</p>
+        </div>
+        <div className="flex items-center space-x-2">
+          {selectedQueue && (
+            <>
+              <BatchUploadDialog queueId={selectedQueue} />
+              <CreateJobDialog queueId={selectedQueue} />
+            </>
+          )}
+        </div>
       </div>
 
       <Card>

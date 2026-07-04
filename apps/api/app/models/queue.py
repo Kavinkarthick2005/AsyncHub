@@ -19,3 +19,4 @@ class Queue(TimestampMixin, Base):
 
     project: Mapped["Project"] = relationship("Project", back_populates="queues")
     jobs: Mapped[List["Job"]] = relationship("Job", back_populates="queue")
+    schedules: Mapped[List["Schedule"]] = relationship("Schedule", back_populates="queue", cascade="all, delete-orphan")

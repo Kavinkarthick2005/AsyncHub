@@ -52,29 +52,29 @@ export const ORCHESTRATION_NAV_ITEMS = [
     url: "/schedules",
     icon: CalendarClock,
   },
-  {
-    title: "Workflows",
-    url: "/workflows",
-    icon: GitMerge,
-  },
+  // {
+  //   title: "Workflows",
+  //   url: "/workflows",
+  //   icon: GitMerge,
+  // },
 ];
 
 export const SYSTEM_NAV_ITEMS = [
-  {
-    title: "Analytics",
-    url: "/analytics",
-    icon: BarChart,
-  },
+  // {
+  //   title: "Analytics",
+  //   url: "/analytics",
+  //   icon: BarChart,
+  // },
   {
     title: "Dead Letters",
     url: "/dlq",
     icon: MailWarning,
   },
-  {
-    title: "Audit Logs",
-    url: "/audit-logs",
-    icon: ShieldCheck,
-  },
+  // {
+  //   title: "Audit Logs",
+  //   url: "/audit-logs",
+  //   icon: ShieldCheck,
+  // },
   {
     title: "Settings",
     url: "/settings",

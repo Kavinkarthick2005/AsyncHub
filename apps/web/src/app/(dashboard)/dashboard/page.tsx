@@ -1,27 +1,34 @@
 "use client";
 
-import { Activity, Server, Clock, AlertCircle, ArrowUpRight, ArrowDownRight, RefreshCcw } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { AlertCircle, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { fetchApi } from "@/lib/api-client";
 import { useStaggerFadeIn } from "@/animations";
+import { useWorkspace } from "@/providers/workspace-provider";
 
-// Fallback org ID for now. Ideally this comes from a context.
-const ORG_ID = typeof window !== "undefined" ? localStorage.getItem("orgId") : null;
+import { SystemHealthWidget } from "@/components/dashboard/system-health";
+import { OverviewWidget } from "@/components/dashboard/overview-widget";
+import { WorkersWidget } from "@/components/dashboard/workers-widget";
+import { SchedulesWidget } from "@/components/dashboard/schedules-widget";
+import { QueuesWidget } from "@/components/dashboard/queues-widget";
+import { RealtimeFeedWidget } from "@/components/dashboard/realtime-feed-widget";
+import { SlowestJobsWidget } from "@/components/dashboard/slowest-jobs-widget";
+import { RetryHeatmapWidget } from "@/components/dashboard/retry-heatmap-widget";
+import { RecentFailuresWidget } from "@/components/dashboard/recent-failures-widget";
 
 export default function DashboardPage() {
   const containerRef = useStaggerFadeIn(0.1, 0, 0.5);
+  const { activeOrgId } = useWorkspace();
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["dashboard", ORG_ID],
-    queryFn: () => fetchApi(`/dashboard/overview?organization_id=${ORG_ID}`),
-    enabled: !!ORG_ID,
+    queryKey: ["dashboard", activeOrgId],
+    queryFn: () => fetchApi(`/dashboard/overview?organization_id=${activeOrgId}`),
+    enabled: !!activeOrgId,
+    refetchInterval: 15000, // Refresh every 15s for "live" feel
   });
 
-  if (!ORG_ID) {
+  if (!activeOrgId) {
     return (
       <div className="flex items-center justify-center h-[50vh]">
         <div className="text-center space-y-2">
@@ -36,22 +43,10 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-6 animate-pulse">
-        <div>
-          <div className="h-8 w-48 bg-muted rounded"></div>
-          <div className="h-4 w-64 bg-muted rounded mt-2"></div>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="h-8 w-48 bg-muted rounded"></div>
+        <div className="grid gap-4 md:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="border-border/50">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="h-4 w-24 bg-muted rounded"></div>
-                <div className="h-4 w-4 bg-muted rounded"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-8 w-16 bg-muted rounded"></div>
-                <div className="h-3 w-32 bg-muted rounded mt-2"></div>
-              </CardContent>
-            </Card>
+            <div key={i} className="h-32 bg-muted rounded"></div>
           ))}
         </div>
       </div>
@@ -70,55 +65,39 @@ export default function DashboardPage() {
     );
   }
 
-  const stats = data || { active_jobs: 0, workers_online: 0, failure_rate_last_hour: 0 };
+  const stats = data || {};
 
   return (
-    <div className="flex flex-col gap-6" ref={containerRef}>
+    <div className="flex flex-col gap-6 pb-12" ref={containerRef}>
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
-        <p className="text-muted-foreground mt-2">Monitor your orchestration cluster in real-time.</p>
+        <h1 className="text-3xl font-bold tracking-tight">Operations Control Plane</h1>
+        <p className="text-muted-foreground mt-2">Monitor cluster health, queues, and workers in real-time.</p>
       </div>
 
-      {/* Metrics Row */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Workers</CardTitle>
-            <Server className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.workers_online}</div>
-            <p className="text-xs text-muted-foreground flex items-center mt-1">
-              Currently connected
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.active_jobs}</div>
-            <p className="text-xs text-muted-foreground flex items-center mt-1">
-              Queued or Running
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Failure Rate (1h)</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.failure_rate_last_hour}%</div>
-            <p className="text-xs text-muted-foreground flex items-center mt-1">
-              Completed vs Failed jobs
-            </p>
-          </CardContent>
-        </Card>
+      {/* Row 1: High-Level Widgets */}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <SystemHealthWidget health={stats.system_health} />
+        <OverviewWidget overview={stats.overview} />
+        <WorkersWidget workers={stats.workers} />
+        <SchedulesWidget schedules={stats.schedules} />
+      </div>
+
+      {/* Row 2: Feeds & Queues */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="md:col-span-2">
+          <QueuesWidget queues={stats.queues} />
+        </div>
+        <div>
+          <RealtimeFeedWidget organizationId={activeOrgId} />
+        </div>
+      </div>
+
+      {/* Row 3: Problems & Bottlenecks */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <RecentFailuresWidget failures={stats.recent_failures} />
+        <SlowestJobsWidget jobs={stats.slowest_jobs} />
+        <RetryHeatmapWidget heatmap={stats.retry_heatmap} />
       </div>
     </div>
   );
 }
-

@@ -50,3 +50,43 @@ class JobService:
         except Exception as e:
             await self.session.rollback()
             raise ValueError(f"Failed to enqueue job: {str(e)}")
+
+    async def enqueue_batch_jobs(self, queue_id: UUID, jobs_in: List[JobCreate], user_id: UUID) -> dict:
+        await self._verify_queue_access(queue_id, user_id, ["owner", "admin", "developer"])
+        try:
+            created_jobs = await self.job_repo.create_batch(queue_id, jobs_in)
+            await self.session.commit()
+            return {
+                "accepted": len(created_jobs),
+                "failed": len(jobs_in) - len(created_jobs),
+                "job_ids": [j.id for j in created_jobs]
+            }
+        except Exception as e:
+            await self.session.rollback()
+            raise ValueError(f"Failed to enqueue batch jobs: {str(e)}")
+
+    async def replay_job(self, job_id: UUID, user_id: UUID) -> Job:
+        job = await self.get_job_by_id(job_id, user_id)
+        if job.status != "dead":
+            raise ValueError(f"Only dead jobs can be replayed. Current status: {job.status}")
+
+        # Reset job state
+        from app.models.job import JobEvent
+        job.status = "queued"
+        job.retries = 0
+        job.error_message = None
+
+        event = JobEvent(
+            job_id=job.id,
+            from_status="dead",
+            to_status="queued",
+            message="Job manually replayed"
+        )
+        self.session.add(event)
+        
+        try:
+            await self.session.commit()
+            return await self.get_job_by_id(job.id, user_id)
+        except Exception as e:
+            await self.session.rollback()
+            raise ValueError(f"Failed to replay job: {str(e)}")

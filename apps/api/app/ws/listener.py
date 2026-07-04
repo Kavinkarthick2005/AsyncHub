@@ -19,10 +19,15 @@ async def _listen_loop():
                 logger.info(f"Received notification on {channel}: {payload}")
                 try:
                     data = json.loads(payload)
-                    queue_id = data.get("payload", {}).get("queue_id")
+                    payload_data = data.get("payload", {})
+                    queue_id = payload_data.get("queue_id")
+                    org_id = payload_data.get("org_id")
+                    
                     if queue_id:
-                        # Broadcast the payload (the versioned envelope)
                         asyncio.create_task(manager.broadcast("queue", queue_id, data))
+                        
+                    if org_id:
+                        asyncio.create_task(manager.broadcast("org", org_id, data))
                 except Exception as e:
                     logger.error(f"Error handling notification: {e}")
 

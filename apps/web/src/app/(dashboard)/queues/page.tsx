@@ -8,16 +8,26 @@ import { Button } from "@/components/ui/button";
 import { Pause, Play, AlertCircle, RefreshCcw } from "lucide-react";
 import { useStaggerFadeIn } from "@/animations";
 
-const PROJECT_ID = typeof window !== "undefined" ? localStorage.getItem("projectId") : null;
+import { useWorkspace } from "@/providers/workspace-provider";
 
 export default function QueuesPage() {
   const containerRef = useStaggerFadeIn(0.1, 0, 0.5);
   const queryClient = useQueryClient();
+  const { activeOrgId } = useWorkspace();
+
+  // Fetch projects for the active organization
+  const { data: projects } = useQuery({
+    queryKey: ["projects", activeOrgId],
+    queryFn: () => fetchApi(`/organizations/${activeOrgId}/projects`),
+    enabled: !!activeOrgId,
+  });
+
+  const projectId = projects?.[0]?.id || null;
 
   const { data: queues, isLoading, isError, refetch } = useQuery({
-    queryKey: ["queues", PROJECT_ID],
-    queryFn: () => fetchApi(`/projects/${PROJECT_ID}/queues`),
-    enabled: !!PROJECT_ID,
+    queryKey: ["queues", projectId],
+    queryFn: () => fetchApi(`/projects/${projectId}/queues`),
+    enabled: !!projectId,
   });
 
   const togglePauseMutation = useMutation({
@@ -28,10 +38,10 @@ export default function QueuesPage() {
       });
     },
     onMutate: async ({ queueId, is_paused }) => {
-      await queryClient.cancelQueries({ queryKey: ["queues", PROJECT_ID] });
-      const previousQueues = queryClient.getQueryData(["queues", PROJECT_ID]);
+      await queryClient.cancelQueries({ queryKey: ["queues", projectId] });
+      const previousQueues = queryClient.getQueryData(["queues", projectId]);
 
-      queryClient.setQueryData(["queues", PROJECT_ID], (old: any) => {
+      queryClient.setQueryData(["queues", projectId], (old: any) => {
         if (!old) return old;
         return old.map((q: any) =>
           q.id === queueId ? { ...q, is_paused } : q
@@ -42,15 +52,15 @@ export default function QueuesPage() {
     },
     onError: (err, newQueue, context) => {
       if (context?.previousQueues) {
-        queryClient.setQueryData(["queues", PROJECT_ID], context.previousQueues);
+        queryClient.setQueryData(["queues", projectId], context.previousQueues);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["queues", PROJECT_ID] });
+      queryClient.invalidateQueries({ queryKey: ["queues", projectId] });
     },
   });
 
-  if (!PROJECT_ID) {
+  if (!projectId) {
     return (
       <div className="flex items-center justify-center h-[50vh]">
         <div className="text-center space-y-2">

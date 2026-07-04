@@ -42,6 +42,40 @@ async def get_current_user_ws(
         raise HTTPException(status_code=401, detail="User not found")
     return user
 
+@router.websocket("/orgs/{organization_id}")
+async def org_websocket_endpoint(
+    websocket: WebSocket,
+    organization_id: UUID,
+    token: str = Query(...),
+    db: AsyncSession = Depends(get_db)
+):
+    # Verify user token manually since Depends doesn't work well directly in WS signature sometimes
+    try:
+        user = await get_current_user_ws(token, db)
+    except Exception as e:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid auth")
+        return
+        
+    await manager.connect(websocket, "org", str(organization_id))
+    
+    await websocket.send_json({
+        "type": "connection.established",
+        "payload": {"organization_id": str(organization_id)}
+    })
+    
+    try:
+        while True:
+            data = await asyncio.wait_for(websocket.receive_json(), timeout=60.0)
+            if data.get("type") == "ping":
+                await websocket.send_json({"type": "pong"})
+    except asyncio.TimeoutError:
+        await manager.disconnect(websocket, "org", str(organization_id))
+    except WebSocketDisconnect:
+        await manager.disconnect(websocket, "org", str(organization_id))
+    except Exception as e:
+        logger.error(f"WebSocket error for {user.id} on org {organization_id}: {e}")
+        await manager.disconnect(websocket, "org", str(organization_id))
+
 @router.websocket("/queues/{queue_id}")
 async def queue_websocket_endpoint(
     websocket: WebSocket,

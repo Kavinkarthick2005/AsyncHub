@@ -20,6 +20,7 @@ class JobBase(BaseModel):
     priority: Optional[int] = 0
     max_retries: Optional[int] = 3
     idempotency_key: Optional[str] = None
+    run_after: Optional[datetime] = None
 
 class JobCreate(JobBase):
     pass
@@ -31,8 +32,15 @@ class JobResponse(JobBase):
     retries: int
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
+    run_after: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
 
     class Config:
         from_attributes = True
+
+class BatchJobResponse(BaseModel):
+    accepted: int
+    failed: int
+    job_ids: List[UUID]
+    errors: List[str] = []

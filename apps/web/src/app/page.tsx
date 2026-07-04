@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { ArrowRight, Command, Server, Shield, Zap, GitBranch, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useFadeIn, useStaggerFadeIn } from "@/animations";
+import { useFadeIn, useStaggerFadeIn, useScrollReveal, useStaggerScrollReveal } from "@/animations";
 
 export default function LandingPage() {
   const heroRef = useStaggerFadeIn(0.1, 0, 0.8);
-  const overviewRef = useFadeIn(0.2);
+  const overviewRef = useScrollReveal(0.2);
   const buttonsRef = useStaggerFadeIn(0.1, 0.2);
-  const capabilitiesRef = useStaggerFadeIn(0.1, 0.4);
+  const capabilitiesRef = useStaggerScrollReveal(0.1, 0.2);
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -23,9 +23,9 @@ export default function LandingPage() {
             <span className="font-bold tracking-tight">AsyncHub</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-            <Link href="#overview" className="text-muted-foreground hover:text-foreground transition-colors">Overview</Link>
-            <Link href="#capabilities" className="text-muted-foreground hover:text-foreground transition-colors">Capabilities</Link>
-            <Link href="#architecture" className="text-muted-foreground hover:text-foreground transition-colors">Architecture</Link>
+            <Link href="#overview" className="text-muted-foreground hover:text-foreground transition-colors">Platform</Link>
+            <Link href="#capabilities" className="text-muted-foreground hover:text-foreground transition-colors">Features</Link>
+            <Link href="/docs" className="text-muted-foreground hover:text-foreground transition-colors">Docs</Link>
           </nav>
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground">
@@ -138,11 +138,6 @@ export default function LandingPage() {
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} AsyncHub Inc. All rights reserved.
           </p>
-          <div className="flex gap-4 text-sm text-muted-foreground">
-            <Link href="#" className="hover:text-foreground">Terms</Link>
-            <Link href="#" className="hover:text-foreground">Privacy</Link>
-            <Link href="#" className="hover:text-foreground">Status</Link>
-          </div>
         </div>
       </footer>
     </div>

@@ -24,3 +24,16 @@ async def get_job(
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=403, detail=str(e))
+
+@router.post("/{job_id}/replay", response_model=JobResponse)
+async def replay_job(
+    job_id: UUID,
+    current_user: User = Depends(get_current_user),
+    job_service: JobService = Depends(get_job_service)
+):
+    try:
+        return await job_service.replay_job(job_id, current_user.id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=403, detail=str(e))

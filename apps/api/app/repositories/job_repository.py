@@ -34,6 +34,7 @@ class JobRepository:
             priority=job_in.priority,
             max_retries=job_in.max_retries,
             idempotency_key=job_in.idempotency_key,
+            run_after=job_in.run_after,
             status="queued"
         )
         self.session.add(job)
@@ -49,3 +50,34 @@ class JobRepository:
         
         # We do NOT commit here to let the service handle the transaction.
         return job
+
+    async def create_batch(self, queue_id: UUID, jobs_in: List[JobCreate]) -> List[Job]:
+        created_jobs = []
+        for job_in in jobs_in:
+            job = Job(
+                queue_id=queue_id,
+                name=job_in.name,
+                payload=job_in.payload,
+                priority=job_in.priority,
+                max_retries=job_in.max_retries,
+                idempotency_key=job_in.idempotency_key,
+                run_after=job_in.run_after,
+                status="queued"
+            )
+            self.session.add(job)
+            created_jobs.append(job)
+        
+        await self.session.flush()
+
+        events = []
+        for job in created_jobs:
+            event = JobEvent(
+                job_id=job.id,
+                from_status=None,
+                to_status="queued",
+                message="Batch job enqueued"
+            )
+            events.append(event)
+        
+        self.session.add_all(events)
+        return created_jobs

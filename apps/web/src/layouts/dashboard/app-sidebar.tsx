@@ -33,10 +33,13 @@ import {
   SYSTEM_NAV_ITEMS,
 } from "@/constants/navigation";
 
+import { useWorkspace } from "@/providers/workspace-provider";
+import { CreateOrganizationDialog } from "@/components/create-organization-dialog";
+
 export function AppSidebar() {
   const pathname = usePathname();
   const { isMobile } = useSidebar();
-  const [activeWorkspace, setActiveWorkspace] = React.useState("Acme Corp");
+  const { activeOrgId, setActiveOrgId, organizations, activeOrg, isLoadingOrgs } = useWorkspace();
 
   return (
     <Sidebar collapsible="icon" variant="inset" className="border-r border-border/50 bg-background transition-all duration-300 ease-in-out">
@@ -54,7 +57,9 @@ export function AppSidebar() {
                   <Command className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold text-foreground">{activeWorkspace}</span>
+                  <span className="truncate font-semibold text-foreground">
+                    {isLoadingOrgs ? "Loading..." : (activeOrg?.name || "No Organization")}
+                  </span>
                   <span className="truncate text-xs text-muted-foreground">Enterprise</span>
                 </div>
                 <ChevronsUpDown className="ml-auto size-4" />
@@ -69,27 +74,27 @@ export function AppSidebar() {
                   <DropdownMenuLabel className="text-xs text-muted-foreground">
                     Workspaces
                   </DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => setActiveWorkspace("Acme Corp")} className="gap-2 p-2 cursor-pointer">
-                    <div className="flex size-6 items-center justify-center rounded-sm border">
-                      <Command className="size-3" />
-                    </div>
-                    Acme Corp
-                    <DropdownMenuShortcut>⌘1</DropdownMenuShortcut>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setActiveWorkspace("Stark Industries")} className="gap-2 p-2 cursor-pointer">
-                    <div className="flex size-6 items-center justify-center rounded-sm border">
-                      <Command className="size-3" />
-                    </div>
-                    Stark Industries
-                    <DropdownMenuShortcut>⌘2</DropdownMenuShortcut>
-                  </DropdownMenuItem>
+                  {organizations.map((org) => (
+                    <DropdownMenuItem 
+                      key={org.id}
+                      onClick={() => setActiveOrgId(org.id)} 
+                      className="gap-2 p-2 cursor-pointer"
+                    >
+                      <div className="flex size-6 items-center justify-center rounded-sm border">
+                        <Command className="size-3" />
+                      </div>
+                      {org.name}
+                    </DropdownMenuItem>
+                  ))}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="gap-2 p-2 cursor-pointer text-muted-foreground">
-                    <div className="flex size-6 items-center justify-center rounded-md bg-background border">
-                      <Plus className="size-4" />
-                    </div>
-                    <div className="font-medium text-foreground">Add workspace</div>
-                  </DropdownMenuItem>
+                  <CreateOrganizationDialog>
+                    <DropdownMenuItem className="gap-2 p-2 cursor-pointer text-muted-foreground" onSelect={(e) => e.preventDefault()}>
+                      <div className="flex size-6 items-center justify-center rounded-md bg-background border">
+                        <Plus className="size-4" />
+                      </div>
+                      <div className="font-medium text-foreground">Add workspace</div>
+                    </DropdownMenuItem>
+                  </CreateOrganizationDialog>
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
