@@ -73,7 +73,7 @@ Want to see the system alive immediately with realistic data?
 make demo
 ```
 *This command boots the entire stack via Docker and runs a Python seeder that creates organizations, projects, queues, workers, workflows, and 250+ jobs.*
-**Visit: http://localhost:3000** (Login with `demo@asynchub.com` / `demo123`)
+**Visit: https://async-hub.vercel.app/** (Login with `demo@asynchub.com` / `demo123`)
 
 ### Standard Docker Setup
 ```bash
