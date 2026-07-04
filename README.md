@@ -2,7 +2,7 @@
   <h1>AsyncHub</h1>
   <p><strong>A Distributed Job Scheduling, Queue Management, and Workflow Orchestration Platform</strong></p>
   
-  ![AsyncHub Hero](/docs/assets/hero.png)
+  ![AsyncHub Hero](./screenshots/landing.png)
   
   [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
   [![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
@@ -18,7 +18,7 @@ AsyncHub is an open-source, full-stack distributed systems platform designed to 
 Built for resiliency and scale, it utilizes PostgreSQL `SKIP LOCKED` concurrency control to enable a distributed worker fleet without requiring an external message broker like RabbitMQ or Redis, keeping the architecture highly cohesive and easy to deploy.
 
 ### 🏛️ Architecture
-![Architecture Diagram](/docs/assets/architecture.png)
+![Dashboard](./screenshots/dashboard.png)
 
 ## 🚀 The Problem & Solution
 **The Problem**: Traditional background job systems often obscure failure. When a job drops, tracking the dead-letter queues, analyzing throughput, or orchestrating dependent jobs (DAGs) requires cobbling together multiple tools (like Celery + Flower + Airflow). 
@@ -36,7 +36,7 @@ Built for resiliency and scale, it utilizes PostgreSQL `SKIP LOCKED` concurrency
 - **Real-Time Observability**: Live metrics, queue depths, and worker statuses.
 - **Multi-Tenancy**: Isolate environments using Organizations and Projects with unique API Keys.
 
-![Demo GIF](/docs/assets/demo.gif)
+![Workflow Builder](./screenshots/workflow.png)
 
 ## 🛠️ Tech Stack
 - **Backend:** Python, FastAPI, SQLAlchemy, Pydantic, Loguru, Alembic, PostgreSQL (asyncpg).
