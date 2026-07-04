@@ -47,4 +47,4 @@ jobs:
         DATABASE_URL: postgresql+asyncpg://postgres:postgrespassword@localhost:5432/asynchub_test
         SECRET_KEY: test_secret_key
       run: |
-        pytest
+        python -m pytest
