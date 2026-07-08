@@ -1,6 +1,6 @@
 <div align="center">
   <h1>AsyncHub</h1>
-  <p><strong>A Distributed Job Scheduling, Queue Management, and Workflow Orchestration Platform</strong></p>
+  <p><strong>A Distributed Job Scheduling, Queue Management, and Workflow Orchestration Platforms</strong></p>
   
   ![AsyncHub Hero](./screenshots/landing.png)
   
